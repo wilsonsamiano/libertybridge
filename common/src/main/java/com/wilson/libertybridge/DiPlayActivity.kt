@@ -1691,10 +1691,13 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             }
             card.addView(label(getString(R.string.settings_usb_charging_description), 14, MUTED))
         }
-        // The tablet hotspot switch only exists in MANUAL mode: in EXISTING_WIFI mode there is
-        // nothing to turn on, so the whole section (and its search title) stays out of the way.
-        // Tablets use Android's "Modify system settings" access for this; no ADB probe runs here.
-        if (AirPlayPersistence.loadWirelessHotspotMode(this) == WirelessHotspotMode.MANUAL) filteredSection(content, SettingsSection.TABLET_HOTSPOT,
+        // The tablet hotspot switch only exists in MANUAL mode on Android 8-10, where an app
+        // can start tethering at all: in EXISTING_WIFI mode there is nothing to turn on, and on
+        // other versions no app can start it, so the whole section (and its search title) stays
+        // out of the way. Tablets use Android's "Modify system settings" access for this; no ADB
+        // probe runs here.
+        if (AirPlayPersistence.loadWirelessHotspotMode(this) == WirelessHotspotMode.MANUAL &&
+            TabletHotspotTethering.appStartSupported()) filteredSection(content, SettingsSection.TABLET_HOTSPOT,
             getString(R.string.settings_tablet_hotspot_control), R.drawable.ic_dp_permissions) { card ->
             toggle(card, getString(R.string.auto_tablet_hotspot_title),
                 getString(R.string.settings_auto_tablet_hotspot_system_description), TabletHotspotSettings.enabled(this)) { enabled ->
