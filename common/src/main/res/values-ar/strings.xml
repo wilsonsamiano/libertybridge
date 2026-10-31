@@ -656,4 +656,5 @@
     <string name="support_libertybridge">Support LibertyBridge</string>
     <string name="buy_me_a_coffee">Buy Me a Coffee</string>
     <string name="support_libertybridge_description">If LibertyBridge is useful to you, you can support its development here.</string>
+    <string name="navigation_widget_label">تنقل CarPlay</string>
 </resources>
