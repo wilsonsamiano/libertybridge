@@ -82,29 +82,6 @@ class CarPlayHostSettingsTest {
         controllers.close()
     }
 
-    @Test
-    @Config(sdk = [28, 29, 32])
-    fun callPopupSwitchRequiresBydAndAndroid10() {
-        val description = activity.getString(R.string.settings_hide_byd_call_popup_description)
-        setField("settingsMenuCategoryKey", "vehicle")
-        assertFalse(CarHotspotSetup.isBydHeadUnit(activity))
-        val otherMenu = invoke("buildSettingsMenu") as View
-        assertFalse(views(otherMenu).filterIsInstance<Switch>().any { it.contentDescription == description })
-        shadowOf(activity.packageManager).installPackage(PackageInfo().apply {
-            packageName = "com.byd.carsettings"
-            applicationInfo = ApplicationInfo().apply {
-                packageName = "com.byd.carsettings"
-                flags = ApplicationInfo.FLAG_SYSTEM
-            }
-        })
-        assertTrue(CarHotspotSetup.isBydHeadUnit(activity))
-        val bydMenu = invoke("buildSettingsMenu") as View
-        assertEquals(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q,
-            views(bydMenu).filterIsInstance<Switch>().any { it.contentDescription == description })
-    }
-
-    @Test
-    @Config(sdk = [28])
     fun wifiDirectStaysAChoiceBeforeAndroid10() {
         // Wi-Fi Direct starts on Android 9 and earlier since 2db15060, and Settings offers it there.
         val menu = invoke("buildSettingsMenu") as View

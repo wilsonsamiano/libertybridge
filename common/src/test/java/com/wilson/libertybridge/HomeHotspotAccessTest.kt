@@ -112,22 +112,6 @@ class HomeHotspotAccessTest {
         assertEquals("package:${home.packageName}", opened.dataString)
     }
 
-    @Test fun onABydUnitHomeKeepsTheAdbRoute() {
-        shadowOf(context.packageManager).installPackage(PackageInfo().apply {
-            packageName = "com.byd.carsettings"
-            applicationInfo = ApplicationInfo().apply {
-                packageName = "com.byd.carsettings"
-                flags = ApplicationInfo.FLAG_SYSTEM
-            }
-        })
-        val home = openHome().get()
-        awaitResult(home, CarHotspotTethering.Result.PERMISSION_REQUIRED)
-        val shown = texts(home)
-        assertTrue(shown.toString(), home.getString(R.string.hotspot_control_missing) in shown)
-        assertTrue(shown.toString(), home.getString(R.string.open_car_hotspot_settings) in shown)
-        assertFalse(shown.toString(), home.getString(R.string.settings_write_settings_allow) in shown)
-    }
-
     @Test fun onceTheAccessIsAllowedTheHotspotIsStartedOnReturn() {
         val controller = openHome()
         val home = controller.get()

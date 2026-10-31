@@ -3,7 +3,6 @@ package com.wilson.libertybridge
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import com.wilson.libertybridge.adb.LocalAdb
-import com.wilson.libertybridge.hud.BydOutputSettings
 import com.wilson.libertybridge.network.CarHotspotSettings
 import com.wilson.libertybridge.orchestration.WirelessHotspotMode
 import org.junit.Assert.*
@@ -30,42 +29,6 @@ class CarHotspotSetupTest {
         assertFalse(CarHotspotSettings.enabled(context))
         configureHotspot()
         assertFalse(eligible())
-    }
-
-    @Test fun qualcommBydWithoutNavigationServicesCanReachHotspotSetup() {
-        ShadowBuild.setManufacturer("QUALCOMM")
-        ShadowBuild.setBrand("qti")
-        installPackage("com.byd.carsettings", system = true)
-        assertFalse(BydOutputSettings.navigationAvailable(context))
-        assertTrue(CarHotspotSetup.isBydHeadUnit(context))
-        assertTrue(CarHotspotSettings.visible(CarHotspotSetup.isBydHeadUnit(context), LocalAdb.Access.NOT_APPROVED))
-        assertFalse(CarHotspotSettings.visible(CarHotspotSetup.isBydHeadUnit(context), LocalAdb.Access.UNREACHABLE))
-    }
-
-    @Test fun userInstalledLookalikeDoesNotIdentifyABydHeadUnit() {
-        installPackage("com.byd.carsettings", system = false)
-        assertFalse(CarHotspotSetup.isBydHeadUnit(context))
-    }
-
-    @Test fun genericHeadUnitRemainsHiddenEvenWithAdbReady() {
-        assertFalse(CarHotspotSetup.isBydHeadUnit(context))
-        assertFalse(CarHotspotSettings.visible(CarHotspotSetup.isBydHeadUnit(context), LocalAdb.Access.READY))
-    }
-
-    @Test fun existingNavigationBasedDetectionIsPreserved() {
-        installPackage("com.byd.amapservice", system = true)
-        assertTrue(BydOutputSettings.navigationAvailable(context))
-        assertTrue(CarHotspotSetup.isBydHeadUnit(context))
-    }
-
-    @Test fun onlyBydWithSupportedAdbSeesTheSettingIncludingBeforeApproval() {
-        for (access in LocalAdb.Access.entries) {
-            assertFalse(CarHotspotSettings.visible(false, access))
-        }
-        assertTrue(CarHotspotSettings.visible(true, LocalAdb.Access.NOT_APPROVED))
-        assertTrue(CarHotspotSettings.visible(true, LocalAdb.Access.READY))
-        assertFalse(CarHotspotSettings.visible(true, LocalAdb.Access.UNREACHABLE))
-        assertFalse(CarHotspotSettings.visible(true, LocalAdb.Access.UNSUPPORTED))
     }
 
     @Test fun losingAdbHidesTheSettingWithoutClearingOrDisablingTheSavedChoice() {

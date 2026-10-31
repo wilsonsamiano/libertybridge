@@ -12,7 +12,6 @@ import android.hardware.usb.UsbInterface
 import android.hardware.usb.UsbManager
 import android.os.Looper
 import com.wilson.libertybridge.airplay.*
-import com.wilson.libertybridge.hud.BydNavigationOutputs
 import com.wilson.libertybridge.orchestration.*
 import com.wilson.libertybridge.transport.Iap2IdentificationConfig
 import com.wilson.libertybridge.transport.UsbDeviceId
@@ -37,7 +36,6 @@ class CarPlayControllerUsbServiceTest {
 
     @After fun tearDown() {
         controllers.forEach { it.close(); assertTrue(it.awaitClosed(2_000)) }
-        BydNavigationOutputs.endNow()
     }
 
     @Test fun wirelessLocalCanBeCreatedAndReachMfiWithoutAUsbService() {

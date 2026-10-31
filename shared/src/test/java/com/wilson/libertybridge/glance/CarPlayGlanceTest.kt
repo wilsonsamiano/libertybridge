@@ -3,7 +3,7 @@ package com.wilson.libertybridge.glance
 import com.wilson.libertybridge.iap2.body.Iap2BodyBuilder
 import com.wilson.libertybridge.iap2.message.Iap2Messages
 import com.wilson.libertybridge.iap2.message.LaneGuidanceLane
-import com.wilson.libertybridge.hud.BydHudRouteState
+import com.wilson.libertybridge.glance.RouteGuidanceState
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -109,7 +109,7 @@ class CarPlayGlanceTest {
     // Inject the route parser's monotonic clock rather than waiting 30 seconds in each test.
     private fun withRouteClock(test: ((Long) -> Unit) -> Unit) {
         val route = CarPlayGlance.javaClass.getDeclaredField("route").apply { isAccessible = true }
-            .get(CarPlayGlance) as BydHudRouteState
+            .get(CarPlayGlance) as RouteGuidanceState
         val clock = route.javaClass.getDeclaredField("nanoTime").apply { isAccessible = true }
         val original = clock.get(route)
         var now = 1_000_000_000L
