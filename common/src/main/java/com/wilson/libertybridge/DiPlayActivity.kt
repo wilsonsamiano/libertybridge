@@ -2149,7 +2149,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                         render()
                     },
                     { failure ->
-                        Log.w("DiPlay-Update", "update check failed", failure)
+                        Log.w("LibertyBridge-Update", "update check failed", failure)
                         updateMessage = failure.message ?: getString(R.string.update_failed)
                         updateStage = UpdateStage.FAILED
                         render()
@@ -2174,7 +2174,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
 
     private fun scheduleBackgroundUpdateChecks() {
         runCatching { BackgroundUpdateScheduler.schedule(applicationContext) }
-            .onFailure { Log.i("DiPlay-Update", "background update scheduling unavailable", it) }
+            .onFailure { Log.i("LibertyBridge-Update", "background update scheduling unavailable", it) }
     }
 
     private fun downloadUpdate() {
@@ -2228,7 +2228,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                         render()
                     },
                     { failure ->
-                        Log.w("DiPlay-Update", "update download failed", failure)
+                        Log.w("LibertyBridge-Update", "update download failed", failure)
                         updateMessage = failure.message ?: getString(R.string.update_failed)
                         updateStage = UpdateStage.FAILED
                         render()
@@ -2271,10 +2271,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         val outcome = "${if (installers > 1) "chooser" else "direct"} uri=${if (publicUri != null) "public" else "provider"} installers=$installers"
         try {
             startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-            Log.i("DiPlay-Update", "install started: $outcome")
+            Log.i("LibertyBridge-Update", "install started: $outcome")
             UpdateAvailability.recordInstall(applicationContext, System.currentTimeMillis(), outcome)
         } catch (failure: RuntimeException) {
-            Log.w("DiPlay-Update", "install failed to start: $outcome", failure)
+            Log.w("LibertyBridge-Update", "install failed to start: $outcome", failure)
             UpdateAvailability.recordInstall(applicationContext, System.currentTimeMillis(), "$outcome failed=${failure.javaClass.simpleName}")
             updateMessage = getString(R.string.update_failed)
             render()
@@ -2293,7 +2293,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         }
     }
 
-    private fun userAgent() = "DiPlay/${version()}"
+    private fun userAgent() = "LibertyBridge/${version()}"
 
     // An opted-in connection prepares the hotspot in the controller instead of stopping at this reminder.
     private fun carHotspotOff(): Boolean =

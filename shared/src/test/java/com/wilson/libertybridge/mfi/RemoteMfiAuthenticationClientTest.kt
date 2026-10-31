@@ -229,9 +229,13 @@ class RemoteMfiAuthenticationClientTest {
     }
 
     @Test
-    fun allowsHttpsToPublicHosts() {
-        RemoteMfiAuthenticationClient("https://mfi.example.com", token = "secret")
-        RemoteMfiAuthenticationClient("https://8.8.8.8")
+    fun rejectsHttpsToPublicHosts() {
+        assertThrows(IllegalArgumentException::class.java) {
+            RemoteMfiAuthenticationClient("https://mfi.example.com", token = "secret")
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            RemoteMfiAuthenticationClient("https://8.8.8.8")
+        }
     }
 
     @Test

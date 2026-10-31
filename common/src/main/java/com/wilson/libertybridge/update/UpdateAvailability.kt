@@ -22,7 +22,7 @@ internal object UpdateAvailability {
         context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
 
     fun backgroundChecksEnabled(context: Context): Boolean =
-        preferences(context).getBoolean(BACKGROUND_CHECKS, true)
+        preferences(context).getBoolean(BACKGROUND_CHECKS, false)
 
     fun saveBackgroundChecksEnabled(context: Context, enabled: Boolean) {
         preferences(context).edit().putBoolean(BACKGROUND_CHECKS, enabled).apply()

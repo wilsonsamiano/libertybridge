@@ -45,7 +45,7 @@ internal class BackgroundUpdateWorker(context: Context, parameters: WorkerParame
         return try {
             val release = UpdateReleaseLookup.latest(
                 installedVersion = installedVersion,
-                userAgent = "DiPlay/$installedVersion",
+                userAgent = "LibertyBridge/$installedVersion",
                 openConnection = network::openConnection,
             )
             if (release == null) UpdateAvailability.clear(applicationContext)
@@ -65,7 +65,7 @@ internal class BackgroundUpdateWorker(context: Context, parameters: WorkerParame
     }
 
     private companion object {
-        const val TAG = "DiPlay-Update"
+        const val TAG = "LibertyBridge-Update"
         const val MAX_ATTEMPTS = 5
     }
 }

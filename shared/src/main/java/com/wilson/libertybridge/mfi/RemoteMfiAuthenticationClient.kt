@@ -41,8 +41,8 @@ class RemoteMfiAuthenticationClient(
         require(baseAddress.startsWith("http://") || baseAddress.startsWith("https://")) {
             "Remote MFI server address must use http:// or https://"
         }
-        require(baseAddress.startsWith("https://") || isPrivateNetworkHost(hostOf(baseAddress))) {
-            "Remote MFI server address must use https:// unless the host is on a private network"
+        require(isPrivateNetworkHost(hostOf(baseAddress))) {
+            "Remote MFI server address must be on a private network (localhost, LAN, or .local) — public internet servers are not allowed"
         }
         require(connectTimeoutMillis > 0) { "connectTimeoutMillis must be positive" }
         require(readTimeoutMillis > 0) { "readTimeoutMillis must be positive" }

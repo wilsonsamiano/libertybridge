@@ -33,15 +33,15 @@ class UpdateAvailabilityTest {
         assertNull(UpdateAvailability.available(context, "0.2.15"))
     }
 
-    @Test fun backgroundChecksDefaultOnAndPersistTheChoice() {
-        assertTrue(UpdateAvailability.backgroundChecksEnabled(context))
-        UpdateAvailability.saveBackgroundChecksEnabled(context, false)
+    @Test fun backgroundChecksDefaultOffAndPersistTheChoice() {
         assertFalse(UpdateAvailability.backgroundChecksEnabled(context))
+        UpdateAvailability.saveBackgroundChecksEnabled(context, true)
+        assertTrue(UpdateAvailability.backgroundChecksEnabled(context))
     }
 
     @Test fun reportShowsStateWithRelativeAges() {
         assertEquals(
-            "Update check: background=on; lastSuccess=never; cachedRelease=none; lastResult=none (never); lastInstall=none (never)",
+            "Update check: background=off; lastSuccess=never; cachedRelease=none; lastResult=none (never); lastInstall=none (never)",
             UpdateAvailability.report(context, 10_000_000L),
         )
         UpdateAvailability.save(context, release("v0.2.16"))
