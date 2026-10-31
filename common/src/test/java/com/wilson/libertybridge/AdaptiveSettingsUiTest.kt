@@ -511,18 +511,17 @@ class AdaptiveSettingsUiTest {
     @Test
     @Config(shadows = [HotspotSearchProbe::class])
     fun hotspotSearchIndexesItsAsyncCardWithoutStartingAnAdbProbe() {
-        installBydSettingsPackage()
         AirPlayPersistence.saveWirelessHotspotMode(context, WirelessHotspotMode.MANUAL)
         HotspotSearchProbe.workers.clear()
         HotspotSearchProbe.entered = CountDownLatch(1)
         val screen = openSettings()
         val index = ReflectionHelpers.callInstanceMethod<List<DiPlayActivity.SettingsSearchResult>>(
             screen, "buildSettingsSearchIndex")
-        val result = index.single { it.title == screen.getString(R.string.auto_car_hotspot_title) }
+        val result = index.single { it.title == screen.getString(R.string.auto_tablet_hotspot_title) }
 
         assertEquals(SettingsCategory.CONNECTION, result.category)
         assertTrue("Building search metadata must not contact ADB", HotspotSearchProbe.workers.isEmpty())
-        assertFalse(texts(screen).any { it.text == screen.getString(R.string.auto_car_hotspot_title) })
+        assertFalse(texts(screen).any { it.text == screen.getString(R.string.auto_tablet_hotspot_title) })
 
         ReflectionHelpers.callInstanceMethod<Unit>(screen, "openSearchResult",
             ReflectionHelpers.ClassParameter(result.javaClass, result))
@@ -535,21 +534,20 @@ class AdaptiveSettingsUiTest {
         assertEquals(SettingsCategory.CONNECTION,
             ReflectionHelpers.getField<SettingsCategory>(screen, "settingsCategory"))
         assertEquals(1, descendants(screen.window.decorView).filterIsInstance<Switch>().count {
-            it.contentDescription == screen.getString(R.string.auto_car_hotspot_title)
+            it.contentDescription == screen.getString(R.string.auto_tablet_hotspot_title)
         })
     }
 
     @Test
     @Config(shadows = [HotspotSearchProbe::class])
-    fun hotspotSearchKeepsTheCarHotspotAudienceGateAndNeedsNoAdbOffBydUnits() {
-        installBydSettingsPackage()
+    fun hotspotSearchKeepsTheTabletHotspotAudienceGate() {
         AirPlayPersistence.saveWirelessHotspotMode(context, WirelessHotspotMode.EXISTING_WIFI)
         HotspotSearchProbe.workers.clear()
         HotspotSearchProbe.entered = CountDownLatch(1)
         val screen = openSettings()
         fun index() = ReflectionHelpers.callInstanceMethod<List<DiPlayActivity.SettingsSearchResult>>(
             screen, "buildSettingsSearchIndex")
-        val title = screen.getString(R.string.auto_car_hotspot_title)
+        val title = screen.getString(R.string.auto_tablet_hotspot_title)
 
         assertFalse(index().any { it.title == title })
         AirPlayPersistence.saveWirelessHotspotMode(context, WirelessHotspotMode.MANUAL)
@@ -561,14 +559,14 @@ class AdaptiveSettingsUiTest {
 
     @Test
     @Config(sdk = [25, 33], shadows = [HotspotSearchProbe::class])
-    fun hotspotSwitchStaysHiddenOffBydUnitsWhereAndroidLetsNoAppStartTethering() {
+    fun hotspotSwitchStaysHiddenWhereAndroidLetsNoAppStartTethering() {
         AirPlayPersistence.saveWirelessHotspotMode(context, WirelessHotspotMode.MANUAL)
         HotspotSearchProbe.workers.clear()
         HotspotSearchProbe.entered = CountDownLatch(1)
         val screen = openSettings()
         val index = ReflectionHelpers.callInstanceMethod<List<DiPlayActivity.SettingsSearchResult>>(
             screen, "buildSettingsSearchIndex")
-        assertFalse(index.any { it.title == screen.getString(R.string.auto_car_hotspot_title) })
+        assertFalse(index.any { it.title == screen.getString(R.string.auto_tablet_hotspot_title) })
     }
 
     @Test fun cardControlsShareOneHeightAndGap() {
@@ -608,9 +606,9 @@ class AdaptiveSettingsUiTest {
         val screen = openSettings()
         descendants(screen.window.decorView)
             .first { it.contentDescription == screen.getString(R.string.settings_open_category,
-                screen.getString(R.string.settings_vehicle)) }
+                screen.getString(R.string.settings_display)) }
             .performClick()
-        val chooseImage = texts(screen).single { it.text == screen.getString(R.string.choose_image) }
+        val chooseImage = texts(screen).single { it.text == screen.getString(R.string.picture_adjustments) }
         val card = chooseImage.parent as LinearLayout
         val preview = card.getChildAt(card.indexOfChild(chooseImage) - 1)
 
@@ -720,8 +718,8 @@ class AdaptiveSettingsUiTest {
             .performClick()
 
         assertTrue(texts(screen).any { it.text == screen.getString(R.string.settings_advanced_caution_title) })
-        assertTrue(texts(screen).any { it.text == screen.getString(R.string.carplay_map_on_instrument_cluster_experimental) })
-        assertTrue(texts(screen).any { it.text == screen.getString(R.string.advanced_vehicle_data) })
+        assertTrue(texts(screen).any { it.text == screen.getString(R.string.settings_launcher_bubble) })
+        assertTrue(texts(screen).any { it.text == screen.getString(R.string.settings_experimental_display) })
         assertFalse(texts(screen).any { it.text == screen.getString(R.string.automatic_connection) })
         assertFalse(texts(screen).any { it.text == screen.getString(R.string.display_and_performance) })
         assertFalse(texts(screen).any { it.text == screen.getString(R.string.audio_routing) })
@@ -751,12 +749,12 @@ class AdaptiveSettingsUiTest {
 
         val display = visibleIn(R.string.settings_display)
         val audio = visibleIn(R.string.audio)
-        val vehicle = visibleIn(R.string.settings_vehicle)
+        visibleIn(R.string.settings_display)
         val advanced = visibleIn(R.string.settings_advanced)
         val connection = visibleIn(R.string.connection)
 
         assertTrue(display.any { it.startsWith(text(R.string.carplay_dock)) })
-        assertFalse(vehicle.any { it.startsWith(text(R.string.carplay_dock)) })
+        assertFalse(connection.any { it.startsWith(text(R.string.carplay_dock)) })
 
         assertTrue(connection.any { it.startsWith(text(R.string.settings_usb_charging)) })
         assertFalse(advanced.any { it.startsWith(text(R.string.settings_usb_charging)) })
@@ -768,23 +766,12 @@ class AdaptiveSettingsUiTest {
             assertTrue(text(it), text(it) in advanced)
             assertFalse(text(it), text(it) in audio)
         }
-        assertTrue(text(R.string.right_hand_drive) in vehicle)
-        assertTrue(text(R.string.car_button_in_carplay) in vehicle)
-        assertTrue(text(R.string.wheel_siri_key) in vehicle)
-        assertTrue(text(R.string.settings_wheel_keys) in vehicle)
-        assertTrue(text(R.string.settings_navigation_wheel_volume) in advanced)
-        assertFalse(text(R.string.settings_navigation_wheel_volume) in audio)
-        assertFalse(text(R.string.settings_navigation_wheel_volume) in vehicle)
-        assertTrue(text(R.string.settings_ambient_title) in advanced)
-        assertFalse(text(R.string.settings_ambient_title) in audio)
-        assertFalse(text(R.string.settings_ambient_title) in vehicle)
-        assertFalse(text(R.string.settings_ambient_title) in display)
+        assertTrue(text(R.string.right_hand_drive) in display)
         assertTrue(text(R.string.side_panel) in advanced)
         assertTrue(display.any { it.startsWith(text(R.string.settings_app_appearance)) })
         assertFalse(audio.any { it.startsWith(text(R.string.settings_app_appearance)) })
-        assertFalse(vehicle.any { it.startsWith(text(R.string.settings_app_appearance)) })
         assertFalse(advanced.any { it.startsWith(text(R.string.settings_app_appearance)) })
-        listOf(R.string.main_buffered_audio, R.string.efficient_video, R.string.smooth_video, R.string.settings_direct_video_output, R.string.settings_low_latency_decoder, R.string.call_echo_cancellation, R.string.call_voice_filter, R.string.settings_disable_media_key_audio_focus, R.string.right_hand_drive, R.string.car_button_in_carplay,
+        listOf(R.string.main_buffered_audio, R.string.efficient_video, R.string.smooth_video, R.string.settings_direct_video_output, R.string.settings_low_latency_decoder, R.string.call_echo_cancellation, R.string.call_voice_filter, R.string.settings_disable_media_key_audio_focus,
             R.string.side_panel, R.string.split_screen_areas, R.string.carplay_rotation).forEach {
             assertFalse(text(it), text(it) in display)
         }
@@ -1148,7 +1135,7 @@ class AdaptiveSettingsUiTest {
         assertTrue(isInside(languageDestination, categoryScroll))
         run {
             val titles = descendants(categoryScroll).mapNotNull { it.contentDescription?.toString() }.toList()
-            val vehicle = screen.getString(R.string.settings_open_category, screen.getString(R.string.settings_vehicle))
+            val vehicle = screen.getString(R.string.settings_open_category, screen.getString(R.string.settings_navigation))
             val language = screen.getString(R.string.settings_open_category, screen.getString(R.string.language_section_title))
             val about = screen.getString(R.string.settings_open_category, screen.getString(R.string.about))
             assertEquals(titles.indexOf(vehicle) + 1, titles.indexOf(language))
@@ -1249,17 +1236,8 @@ class AdaptiveSettingsUiTest {
         assertEquals(gap, (diagnostics.layoutParams as LinearLayout.LayoutParams).bottomMargin)
         assertEquals(gap, (advanced.layoutParams as LinearLayout.LayoutParams).bottomMargin)
     }
-    private fun installBydSettingsPackage() {
-        shadowOf(context.packageManager).installPackage(PackageInfo().apply {
-            packageName = "com.byd.carsettings"
-            applicationInfo = ApplicationInfo().apply {
-                packageName = "com.byd.carsettings"
-                flags = ApplicationInfo.FLAG_SYSTEM
-            }
-        })
-    }
 
-    @Implements(CarHotspotSetup::class, isInAndroidSdk = false)
+    @Implements(TabletHotspotSetup::class, isInAndroidSdk = false)
     class HotspotSearchProbe {
         @Implementation fun check(context: Context, adb: LocalAdb): LocalAdb.Access {
             workers += Thread.currentThread()

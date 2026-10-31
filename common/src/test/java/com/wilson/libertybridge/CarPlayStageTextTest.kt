@@ -98,11 +98,11 @@ class CarPlayStageTextTest {
             "Wi-Fi Direct could not use channel 149. Choose Auto or another channel. Wi-Fi P2P createGroup failed: ERROR (code=0)",
             knownCause = ConnectionFailureCause.WIFI_DIRECT_CHANNEL_UNAVAILABLE))
 
-        val off = "The car hotspot is off. Turn it on in the car settings and connect again."
-        assertStage(R.string.car_hotspot_is_off, CarPlayStatus.Failed(off,
+        val off = "The tablet hotspot is off. Turn it on in the car settings and connect again."
+        assertStage(R.string.tablet_hotspot_is_off, CarPlayStatus.Failed(off,
             startupFailure = WirelessStartupFailure.HOTSPOT_CONFIGURATION, knownCause = ConnectionFailureCause.CAR_HOTSPOT_OFF))
         assertStage(R.string.connection_interrupted_retrying, CarPlayStatus.Failed(off))
-        assertStage(R.string.car_hotspot_details_differ,
+        assertStage(R.string.tablet_hotspot_details_differ,
             CarPlayStatus.Failed("Manual hotspot SSID does not match the active local AP configuration: 'Other'",
                 startupFailure = WirelessStartupFailure.HOTSPOT_CONFIGURATION,
                 knownCause = ConnectionFailureCause.CAR_HOTSPOT_DETAILS_DIFFER))
@@ -111,11 +111,11 @@ class CarPlayStageTextTest {
                 startupFailure = WirelessStartupFailure.HOTSPOT_NOT_READY,
                 knownCause = ConnectionFailureCause.HOTSPOT_INTERFACE_NOT_FOUND))
         assertStage(R.string.hotspot_control_timeout,
-            CarPlayStatus.Failed("Timed out waiting for the car hotspot. Open the car hotspot settings and connect again.",
+            CarPlayStatus.Failed("Timed out waiting for the tablet hotspot. Open the tablet hotspot settings and connect again.",
                 startupFailure = WirelessStartupFailure.HOTSPOT_NOT_READY,
                 knownCause = ConnectionFailureCause.CAR_HOTSPOT_START_TIMED_OUT))
         assertStage(R.string.hotspot_control_failed,
-            CarPlayStatus.Failed("The car could not start its hotspot. Open the car hotspot settings and connect again.",
+            CarPlayStatus.Failed("The car could not start its hotspot. Open the tablet hotspot settings and connect again.",
                 startupFailure = WirelessStartupFailure.HOTSPOT_NOT_READY,
                 knownCause = ConnectionFailureCause.CAR_HOTSPOT_START_FAILED))
     }

@@ -39,7 +39,7 @@ class ManualHotspotDetailsDifferTest {
         return failure as WirelessStartupException
     }
 
-    @Test fun aCarHotspotWithAnotherNameIsNamed() {
+    @Test fun aTabletHotspotWithAnotherNameIsNamed() {
         carHotspot("Other")
         val failure = startFailure()
         assertEquals(WirelessStartupFailure.HOTSPOT_CONFIGURATION, failure.reason)
@@ -47,7 +47,7 @@ class ManualHotspotDetailsDifferTest {
         assertEquals(ConnectionFailureCause.CAR_HOTSPOT_DETAILS_DIFFER, failure.knownCause)
     }
 
-    @Test fun aCarHotspotOnAnotherBandIsNamed() {
+    @Test fun aTabletHotspotOnAnotherBandIsNamed() {
         carHotspot("Car", legacyBand = 1)
         val failure = startFailure(ManualHotspotBand.GHZ_2_4)
         assertEquals(WirelessStartupFailure.HOTSPOT_CONFIGURATION, failure.reason)

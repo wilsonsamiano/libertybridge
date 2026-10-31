@@ -48,7 +48,7 @@ internal class ManualHotspotInterfaces(
                 }.getOrNull()
             }
         }.getOrDefault(emptyList())
-        val apEnabled = CarHotspotStatus.isEnabled(context)
+        val apEnabled = TabletHotspotStatus.isEnabled(context)
         val ap = apInterfaces(
             observed = publicTethering?.interfaces ?: legacyApInterfaces(),
             interfaces = interfaces,
@@ -65,7 +65,7 @@ internal class ManualHotspotInterfaces(
     }
 
     /**
-     * Some head units run the car hotspot on a Wi-Fi chip the platform never reports as a tether
+     * Some head units run the tablet hotspot on a Wi-Fi chip the platform never reports as a tether
      * interface, and hand the clients to the Android side over a VLAN of the wired interface, such
      * as `eth0.3` on a QUALCOMM CS11 unit (#573). Tethering detection only ever names Wi-Fi
      * interfaces, so that VLAN never enters the AP set and readiness rejects it as
@@ -145,7 +145,7 @@ internal class ManualHotspotInterfaces(
     override fun close() { publicTethering?.close() }
 
     companion object {
-        /** Interface that carried the car hotspot on the reference QUALCOMM CS11 unit (#573). */
+        /** Interface that carried the tablet hotspot on the reference QUALCOMM CS11 unit (#573). */
         const val DEFAULT_CAR_HOTSPOT_INTERFACE = "eth0.3"
 
         // Virtual interfaces that carry vendor plumbing, not the hotspot an iPhone joins.

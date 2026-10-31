@@ -15,10 +15,10 @@ object SettingsBackupCodec {
 
     /**
      * The settings of the main file that travel, by name. That file also holds the iPhones' pairing keys
-     * (`pairing.<id>`), lockdown records, the authentication target and the car's hotspot name and
+     * (`pairing.<id>`), lockdown records, the authentication target and the tablet's hotspot name and
      * passphrase. An imported file must never set those: a pairing key from someone else's file would make
      * DiPlay trust their device. So a key travels only once it is listed here; car-specific values (the
-     * detected screen size, the car's hotspot) and consents (sharing the map with other apps) stay out too.
+     * detected screen size, the tablet's hotspot) and consents (sharing the map with other apps) stay out too.
      */
     private val AIRPLAY_KEYS = setOf(
         "display_scale_tenths", "ui_scale_percent", "hevc_enabled", "hevc_software_decoder",
@@ -66,7 +66,7 @@ object SettingsBackupCodec {
         // These readers call getInt and getBoolean, which throw on any other stored type. A key that is not stored yet
         // has no type to compare with, so the type is declared here.
         "carplay_picture" to Policy.Allow(PICTURE_KEYS, types = PICTURE_KEYS.associateWith { KeyType.INT }),
-        "diplay_car_hotspot" to Policy.Allow(CAR_HOTSPOT_KEYS, types = CAR_HOTSPOT_KEYS.associateWith { KeyType.BOOLEAN }),
+        "diplay_tablet_hotspot" to Policy.Allow(CAR_HOTSPOT_KEYS, types = CAR_HOTSPOT_KEYS.associateWith { KeyType.BOOLEAN }),
     )
 
     private enum class KeyType { BOOLEAN, INT }

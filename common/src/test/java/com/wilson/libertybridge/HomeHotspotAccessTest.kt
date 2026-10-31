@@ -11,8 +11,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.wilson.libertybridge.host.R
-import com.wilson.libertybridge.network.CarHotspotSettings
-import com.wilson.libertybridge.network.CarHotspotTethering
+import com.wilson.libertybridge.network.TabletHotspotSettings
+import com.wilson.libertybridge.network.TabletHotspotTethering
 import com.wilson.libertybridge.orchestration.WirelessHotspotMode
 import java.util.concurrent.atomic.AtomicInteger
 import org.junit.After
@@ -33,7 +33,7 @@ import org.robolectric.annotation.Implements
 import org.robolectric.util.ReflectionHelpers
 
 /**
- * What Home says when DiPlay could not turn the car hotspot on at start-up for lack of the
+ * What Home says when DiPlay could not turn the tablet hotspot on at start-up for lack of the
  * "Modify system settings" access, and what happens once the driver allows it.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -52,13 +52,13 @@ class HomeHotspotAccessTest {
         AirPlayPersistence.saveWirelessHotspotMode(context, WirelessHotspotMode.MANUAL)
         AirPlayPersistence.saveManualHotspotSsid(context, "Car 5G")
         AirPlayPersistence.saveManualHotspotPassphrase(context, "12345678")
-        CarHotspotSettings.setEnabled(context, true)
+        TabletHotspotSettings.setEnabled(context, true)
     }
 
     @After fun tearDown() {
         controllers.forEach { runCatching { it.get().finish() } }
         AppAppearanceRuntime.resetForTest()
-        CarHotspotSettings.setEnabled(context, false)
+        TabletHotspotSettings.setEnabled(context, false)
         WritePermission.allowed = false
         HotspotState.on = false
         clearSettings()
@@ -73,7 +73,7 @@ class HomeHotspotAccessTest {
         Intent(context, DiPlayActivity::class.java).putExtra("page", "home")).setup().also { controllers += it }
 
     /** Waits until the start-up attempt's result has reached Home. An attempt that began cancelled never delivers one. */
-    private fun awaitResult(home: DiPlayActivity, expected: CarHotspotTethering.Result) {
+    private fun awaitResult(home: DiPlayActivity, expected: TabletHotspotTethering.Result) {
         repeat(250) {
             shadowOf(Looper.getMainLooper()).idle()
             if (result(home) == expected) return
@@ -82,7 +82,7 @@ class HomeHotspotAccessTest {
         throw AssertionError("Home has ${result(home)}, not $expected")
     }
 
-    private fun result(home: DiPlayActivity): CarHotspotTethering.Result? =
+    private fun result(home: DiPlayActivity): TabletHotspotTethering.Result? =
         ReflectionHelpers.getField(home, "hotspotStartupResult")
 
     private fun texts(screen: DiPlayActivity): List<String> =
@@ -98,13 +98,13 @@ class HomeHotspotAccessTest {
 
     @Test fun offBydUnitsHomeAsksForTheSystemAccessAndOpensItsScreen() {
         val home = openHome().get()
-        awaitResult(home, CarHotspotTethering.Result.PERMISSION_REQUIRED)
+        awaitResult(home, TabletHotspotTethering.Result.PERMISSION_REQUIRED)
         val shown = texts(home)
         assertTrue(shown.toString(), home.getString(R.string.settings_write_settings_missing) in shown)
         assertTrue(shown.toString(), home.getString(R.string.settings_write_settings_allow) in shown)
         // The ADB sentence and the car settings button belong to BYD units.
         assertFalse(shown.toString(), home.getString(R.string.hotspot_control_missing) in shown)
-        assertFalse(shown.toString(), home.getString(R.string.open_car_hotspot_settings) in shown)
+        assertFalse(shown.toString(), home.getString(R.string.open_tablet_hotspot_settings) in shown)
 
         tap(home, R.string.settings_write_settings_allow)
         val opened = shadowOf(home).nextStartedActivity
@@ -115,7 +115,7 @@ class HomeHotspotAccessTest {
     @Test fun onceTheAccessIsAllowedTheHotspotIsStartedOnReturn() {
         val controller = openHome()
         val home = controller.get()
-        awaitResult(home, CarHotspotTethering.Result.PERMISSION_REQUIRED)
+        awaitResult(home, TabletHotspotTethering.Result.PERMISSION_REQUIRED)
         // Android's screen, opened from Home or from Settings, covers DiPlay, which stops it; the driver
         // allows the access there.
         controller.pause().stop()
@@ -123,7 +123,7 @@ class HomeHotspotAccessTest {
         controller.restart().start().resume()
 
         // A new attempt, not one cancelled by DiPlay having been stopped, and the platform was asked once.
-        awaitResult(home, CarHotspotTethering.Result.READY)
+        awaitResult(home, TabletHotspotTethering.Result.READY)
         assertEquals(1, PlatformStart.calls.get())
         val shown = texts(home)
         assertFalse(shown.toString(), home.getString(R.string.settings_write_settings_missing) in shown)
@@ -133,15 +133,15 @@ class HomeHotspotAccessTest {
     @Test fun returningWithoutTheAccessKeepsAskingForIt() {
         val controller = openHome()
         val home = controller.get()
-        awaitResult(home, CarHotspotTethering.Result.PERMISSION_REQUIRED)
+        awaitResult(home, TabletHotspotTethering.Result.PERMISSION_REQUIRED)
         controller.pause().stop().restart().start().resume()
         shadowOf(Looper.getMainLooper()).idle()
-        assertEquals(CarHotspotTethering.Result.PERMISSION_REQUIRED, result(home))
+        assertEquals(TabletHotspotTethering.Result.PERMISSION_REQUIRED, result(home))
         assertTrue(texts(home).toString(), home.getString(R.string.settings_write_settings_missing) in texts(home))
         assertEquals(0, PlatformStart.calls.get())
     }
 
-    /** The platform's tethering call, which turns the car hotspot on. */
+    /** The platform's tethering call, which turns the tablet hotspot on. */
     @Implements(className = "com.wilson.libertybridge.network.PlatformTetheringStart", isInAndroidSdk = false)
     class PlatformStart {
         @Implementation fun start(context: Context, receiver: ResultReceiver, log: (String) -> Unit) {
@@ -154,8 +154,8 @@ class HomeHotspotAccessTest {
         }
     }
 
-    /** Whether the car hotspot is on, as Android's Wi-Fi state reports it. */
-    @Implements(className = "com.wilson.libertybridge.network.CarHotspotStatus", isInAndroidSdk = false)
+    /** Whether the tablet hotspot is on, as Android's Wi-Fi state reports it. */
+    @Implements(className = "com.wilson.libertybridge.network.TabletHotspotStatus", isInAndroidSdk = false)
     class HotspotState {
         @Implementation fun isEnabled(context: Context): Boolean? = on
 

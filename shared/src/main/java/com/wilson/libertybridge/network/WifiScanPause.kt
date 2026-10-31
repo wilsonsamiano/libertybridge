@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
  * Wi-Fi Direct needs the car's Wi-Fi client switched on. While that client is not joined to a
  * network, BYD firmware searches every band every 10 s (seen on DiLink 3, 4 and 5). The single radio
  * leaves the CarPlay channel for each search, and the iPhone's audio packets sent meanwhile are lost,
- * so music and voice stutter on a 10 s rhythm. The built-in car hotspot runs with the client off and
+ * so music and voice stutter on a 10 s rhythm. The built-in tablet hotspot runs with the client off and
  * is not affected, and Same LAN needs the search, so only Wi-Fi Direct sessions pause it.
  *
  * Android offers apps no way to do this. Through the approved local adb shell, [WifiScanPauseMain]

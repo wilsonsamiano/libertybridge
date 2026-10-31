@@ -483,7 +483,7 @@ object AirPlayPersistence {
             .apply()
     }
 
-    /** Interface that carries the car hotspot when the platform does not report it as a Wi-Fi AP. */
+    /** Interface that carries the tablet hotspot when the platform does not report it as a Wi-Fi AP. */
     fun loadManualHotspotInterface(context: Context): String =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getString(KEY_MANUAL_HOTSPOT_INTERFACE, null)

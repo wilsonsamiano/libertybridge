@@ -123,40 +123,40 @@ class WirelessStartupControllerTest {
         } finally { controller.close(); controller.awaitClosed(2_000) }
     }
 
-    @Test @Config(shadows = [CarHotspotOffConnectTest.HotspotState::class])
-    fun aCarHotspotReportedOffIsNamed() {
-        CarHotspotOffConnectTest.HotspotState.on = false
+    @Test @Config(shadows = [TabletHotspotOffConnectTest.HotspotState::class])
+    fun aTabletHotspotReportedOffIsNamed() {
+        TabletHotspotOffConnectTest.HotspotState.on = false
         val failure = hotspotStartFailure()
         assertEquals(WirelessStartupFailure.HOTSPOT_CONFIGURATION, failure.reason)
-        assertEquals("The car hotspot is off. Turn it on in the car settings and connect again.", failure.message)
+        assertEquals("The tablet hotspot is off. Turn it on in the car settings and connect again.", failure.message)
         assertEquals(ConnectionFailureCause.CAR_HOTSPOT_OFF, failure.knownCause)
     }
 
     @Test @Config(shadows = [Tethering::class])
-    fun aCarHotspotThatDidNotStartIsNamed() {
-        CarHotspotSettings.setEnabled(RuntimeEnvironment.getApplication(), true)
+    fun aTabletHotspotThatDidNotStartIsNamed() {
+        TabletHotspotSettings.setEnabled(RuntimeEnvironment.getApplication(), true)
         for ((result, reason, cause) in listOf(
-            Triple(CarHotspotTethering.Result.TIMED_OUT, WirelessStartupFailure.HOTSPOT_NOT_READY,
+            Triple(TabletHotspotTethering.Result.TIMED_OUT, WirelessStartupFailure.HOTSPOT_NOT_READY,
                 ConnectionFailureCause.CAR_HOTSPOT_START_TIMED_OUT),
-            Triple(CarHotspotTethering.Result.FAILED, WirelessStartupFailure.HOTSPOT_NOT_READY,
+            Triple(TabletHotspotTethering.Result.FAILED, WirelessStartupFailure.HOTSPOT_NOT_READY,
                 ConnectionFailureCause.CAR_HOTSPOT_START_FAILED),
-            Triple(CarHotspotTethering.Result.PERMISSION_REQUIRED, WirelessStartupFailure.HOTSPOT_CONFIGURATION, null),
+            Triple(TabletHotspotTethering.Result.PERMISSION_REQUIRED, WirelessStartupFailure.HOTSPOT_CONFIGURATION, null),
         )) {
             Tethering.result = result
             val failure = hotspotStartFailure()
             assertEquals(reason, failure.reason)
-            assertEquals("${result.diagnostic}. Open the car hotspot settings and connect again.", failure.message)
+            assertEquals("${result.diagnostic}. Open the tablet hotspot settings and connect again.", failure.message)
             assertEquals(cause, failure.knownCause)
         }
     }
 
-    @Implements(className = "com.wilson.libertybridge.network.CarHotspotTethering", isInAndroidSdk = false)
+    @Implements(className = "com.wilson.libertybridge.network.TabletHotspotTethering", isInAndroidSdk = false)
     class Tethering {
         @Implementation fun enable(context: Context, isCancelled: () -> Boolean, timeoutMillis: Long,
-            log: (String) -> Unit): CarHotspotTethering.Result = result
+            log: (String) -> Unit): TabletHotspotTethering.Result = result
 
         companion object {
-            @Volatile var result = CarHotspotTethering.Result.READY
+            @Volatile var result = TabletHotspotTethering.Result.READY
         }
     }
 

@@ -27,7 +27,7 @@ internal object P2pHotspotConflict {
         if (sdk < 33 || hotspotOn != true || rejection.reason != WifiP2pManager.BUSY) return null
         if ((rejection.replyMillis ?: 0L) < PROMPT_REPLY_MILLIS) return null
         return WirelessStartupException(WirelessStartupFailure.WIFI_DIRECT_BESIDE_HOTSPOT,
-            "Android was not allowed to turn the car hotspot off for Wi-Fi Direct").apply { initCause(rejection) }
+            "Android was not allowed to turn the tablet hotspot off for Wi-Fi Direct").apply { initCause(rejection) }
     }
 }
 

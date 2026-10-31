@@ -57,10 +57,10 @@ internal object PlatformTetheringStart {
         if (attempt()) return
         // Android 9 and 10 may hide these non-SDK members from apps that target a newer SDK.
         if (Build.VERSION.SDK_INT in 28..29 && exemptHiddenApis()) {
-            log("car hotspot start: retrying with the hidden API exemption")
+            log("tablet hotspot start: retrying with the hidden API exemption")
             if (attempt()) return
         }
-        log("car hotspot start unavailable: ${failures.joinToString("; ")}")
+        log("tablet hotspot start unavailable: ${failures.joinToString("; ")}")
         throw NoSuchMethodException("startTethering unavailable: ${failures.joinToString("; ")}")
     }
 
@@ -93,10 +93,10 @@ internal object PlatformTetheringStart {
                 try {
                     if (forceAccess) method.isAccessible = true
                     method.invoke(service, *arguments)
-                    log("car hotspot start: called $label${if (forceAccess) " (accessible)" else ""}")
+                    log("tablet hotspot start: called $label${if (forceAccess) " (accessible)" else ""}")
                     return true
                 } catch (error: InvocationTargetException) {
-                    log("car hotspot start: $label rejected by the system: ${describe(error.targetException)}")
+                    log("tablet hotspot start: $label rejected by the system: ${describe(error.targetException)}")
                     throw error
                 } catch (error: IllegalAccessException) {
                     failures += "$label${if (forceAccess) " (accessible)" else ""}: ${describe(error)}"

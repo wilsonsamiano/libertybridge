@@ -126,12 +126,12 @@ class WirelessStartupRecoveryTest {
         assertEquals(View.VISIBLE, retry.visibility)
     }
 
-    // The driver refused Android's prompt to turn the car hotspot off: a retry would only show it again.
-    @Test fun wifiDirectRefusedBesideTheCarHotspotSaysSoAndDoesNotRetry() {
+    // The driver refused Android's prompt to turn the tablet hotspot off: a retry would only show it again.
+    @Test fun wifiDirectRefusedBesideTheTabletHotspotSaysSoAndDoesNotRetry() {
         val stage = TextView(activity)
         ReflectionHelpers.setField(activity, "stageStatusView", stage)
         report(status = CarPlayStatus.Failed("Could not establish WIFI_P2P hotspot: " +
-            "Android was not allowed to turn the car hotspot off for Wi-Fi Direct",
+            "Android was not allowed to turn the tablet hotspot off for Wi-Fi Direct",
             startupFailure = WirelessStartupFailure.WIFI_DIRECT_BESIDE_HOTSPOT))
         assertEquals(activity.getString(R.string.wifi_direct_refused_beside_hotspot), stage.text.toString())
         assertEquals(0, budget().retries)
@@ -199,10 +199,10 @@ class WirelessStartupRecoveryTest {
 
     private val hotspotNotReady = CarPlayStatus.Failed("Could not establish MANUAL hotspot: Hotspot network is not ready",
         startupFailure = WirelessStartupFailure.HOTSPOT_NOT_READY)
-    private val carHotspotOff = CarPlayStatus.Failed("The car hotspot is off. Turn it on in the car settings and connect again.",
+    private val carHotspotOff = CarPlayStatus.Failed("The tablet hotspot is off. Turn it on in the car settings and connect again.",
         startupFailure = WirelessStartupFailure.HOTSPOT_CONFIGURATION)
 
-    // #809: the screen said "Getting CarPlay ready…" while the car hotspot never came up, and after the retries stopped.
+    // #809: the screen said "Getting CarPlay ready…" while the tablet hotspot never came up, and after the retries stopped.
     @Test fun aHotspotThatIsNotReadyIsNamedAndTheStopIsSaid() =
         assertNamedUntilRetriesStop(hotspotNotReady, R.string.hotspot_network_not_ready)
 
@@ -214,12 +214,12 @@ class WirelessStartupRecoveryTest {
     @Test fun anIphoneThatDoesNotConnectInTimeIsNamedAndTheStopIsSaid() =
         assertNamedUntilRetriesStop(failure, R.string.first_tcp_timeout)
 
-    // Nothing is retried for a car hotspot DiPlay cannot use, so the screen does not say "Retrying…".
+    // Nothing is retried for a tablet hotspot DiPlay cannot use, so the screen does not say "Retrying…".
     @Test fun aHotspotDiPlayCannotUseSaysTheRetriesStopped() {
         val stage = TextView(activity)
         ReflectionHelpers.setField(activity, "stageStatusView", stage)
-        listOf("The car hotspot is off. Turn it on in the car settings and connect again.",
-            "Hotspot control permission is missing. Open the car hotspot settings and connect again.",
+        listOf("The tablet hotspot is off. Turn it on in the car settings and connect again.",
+            "Hotspot control permission is missing. Open the tablet hotspot settings and connect again.",
             "Manual hotspot is not running on 5 GHz").forEachIndexed { generation, cause ->
             ReflectionHelpers.setField(activity, "restartGeneration", generation)
             ReflectionHelpers.setField(activity, "startupRetryStopped", false)
@@ -235,7 +235,7 @@ class WirelessStartupRecoveryTest {
     @Test fun aLaterFailureOfTheStoppedAttemptKeepsTheLineSayingTheRetriesStopped() {
         val stage = TextView(activity)
         ReflectionHelpers.setField(activity, "stageStatusView", stage)
-        val offline = CarPlayStatus.Failed("The car hotspot is off. Turn it on in the car settings and connect again.",
+        val offline = CarPlayStatus.Failed("The tablet hotspot is off. Turn it on in the car settings and connect again.",
             startupFailure = WirelessStartupFailure.HOTSPOT_CONFIGURATION)
         report(status = offline)
         val stopped = activity.getString(R.string.hotspot_network_not_ready) + "\n" +
@@ -267,11 +267,11 @@ class WirelessStartupRecoveryTest {
     @Test fun aHotspotCauseIsNamedUntilTheRetriesStop() = assertNamedUntilRetriesStop(
         hotspotNotReady.copy(knownCause = ConnectionFailureCause.HOTSPOT_INTERFACE_NOT_FOUND), R.string.hotspot_interface_not_found)
 
-    @Test fun aCarHotspotThatIsOffIsNamedWhereTheRetriesStop() {
+    @Test fun aTabletHotspotThatIsOffIsNamedWhereTheRetriesStop() {
         val stage = TextView(activity)
         ReflectionHelpers.setField(activity, "stageStatusView", stage)
         report(status = carHotspotOff.copy(knownCause = ConnectionFailureCause.CAR_HOTSPOT_OFF))
-        assertEquals(activity.getString(R.string.car_hotspot_is_off) + "\n" +
+        assertEquals(activity.getString(R.string.tablet_hotspot_is_off) + "\n" +
             activity.getString(R.string.wireless_startup_retries_exhausted), stage.text.toString())
         assertEquals(0, budget().retries)
         assertFalse(ReflectionHelpers.getField(activity, "reconnectScheduled"))

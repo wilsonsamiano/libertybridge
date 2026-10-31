@@ -71,7 +71,7 @@ class LastConnectionProblemTest {
 
     private fun remembered(): String? = LastConnectionProblem.load(context)?.problem?.line()?.let(context::getString)
 
-    private val hotspotOff = CarPlayStatus.Failed("The car hotspot is off. Turn it on in the car settings and connect again.",
+    private val hotspotOff = CarPlayStatus.Failed("The tablet hotspot is off. Turn it on in the car settings and connect again.",
         startupFailure = WirelessStartupFailure.HOTSPOT_CONFIGURATION, knownCause = ConnectionFailureCause.CAR_HOTSPOT_OFF)
     private val notPaired = CarPlayStatus.Failed("The selected iPhone is no longer paired. Choose it again in DiPlay.",
         knownCause = ConnectionFailureCause.CHOSEN_IPHONE_NOT_PAIRED)
@@ -84,7 +84,7 @@ class LastConnectionProblemTest {
             CarPlayStatus.Failed("Hotspot network is not ready", startupFailure = WirelessStartupFailure.HOTSPOT_NOT_READY),
             CarPlayStatus.Failed("Manual hotspot SSID does not match the active local AP configuration: 'Other'",
                 startupFailure = WirelessStartupFailure.HOTSPOT_CONFIGURATION),
-            CarPlayStatus.Failed("Android was not allowed to turn the car hotspot off for Wi-Fi Direct",
+            CarPlayStatus.Failed("Android was not allowed to turn the tablet hotspot off for Wi-Fi Direct",
                 startupFailure = WirelessStartupFailure.WIFI_DIRECT_BESIDE_HOTSPOT),
             CarPlayStatus.IphoneNotListed(nonHubDeviceListed = false),
             CarPlayStatus.IphoneNotListed(nonHubDeviceListed = true),
@@ -135,8 +135,8 @@ class LastConnectionProblemTest {
         host.report(hotspotOff)
         assertTrue(ReflectionHelpers.getField(host, "startupRetryStopped"))
         host.report(CarPlayStatus.Failed("Bluetooth socket closed"))
-        assertEquals(context.getString(R.string.car_hotspot_is_off), host.shown("stageStatusView").lines().first())
-        assertEquals(context.getString(R.string.car_hotspot_is_off), remembered())
+        assertEquals(context.getString(R.string.tablet_hotspot_is_off), host.shown("stageStatusView").lines().first())
+        assertEquals(context.getString(R.string.tablet_hotspot_is_off), remembered())
     }
 
     @Test fun aSessionThatStartsForgetsTheProblem() {

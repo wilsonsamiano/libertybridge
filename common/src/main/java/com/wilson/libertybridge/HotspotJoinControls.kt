@@ -8,7 +8,7 @@ import com.wilson.libertybridge.host.R
 import com.wilson.libertybridge.network.HotspotJoinRepair
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** Opt-in controls for the saved car hotspot. Rendering/resuming never runs privileged work. */
+/** Opt-in controls for the saved tablet hotspot. Rendering/resuming never runs privileged work. */
 internal class HotspotJoinControls(private val activity: Activity, private val sessionActive: () -> Boolean,
     private val backend: Backend = AndroidBackend(activity), private val beforeAction: () -> Unit = {},
     private val labelFactory: (String) -> TextView = { TextView(activity).apply { text = it; textSize = 15f } },

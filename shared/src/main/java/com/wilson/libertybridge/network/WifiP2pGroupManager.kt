@@ -205,8 +205,8 @@ class WifiP2pGroupManager(
                     }
                 },
                 busyCause = { rejection ->
-                    P2pHotspotConflict.failure(Build.VERSION.SDK_INT, CarHotspotStatus.isEnabled(appContext), rejection)
-                        ?.also { diagnostic("Wi-Fi P2P refused beside the car hotspot replyMs=${rejection.replyMillis}; not asking again") }
+                    P2pHotspotConflict.failure(Build.VERSION.SDK_INT, TabletHotspotStatus.isEnabled(appContext), rejection)
+                        ?.also { diagnostic("Wi-Fi P2P refused beside the tablet hotspot replyMs=${rejection.replyMillis}; not asking again") }
                 },
                 request = { selection ->
                     ensureStartActive(attempt)

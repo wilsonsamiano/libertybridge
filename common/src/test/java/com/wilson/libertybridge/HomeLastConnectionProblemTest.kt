@@ -23,7 +23,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.util.ReflectionHelpers
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [29], qualifiers = "en-w1000dp-h700dp-land", shadows = [CarHotspotOffConnectTest.HotspotState::class])
+@Config(sdk = [29], qualifiers = "en-w1000dp-h700dp-land", shadows = [TabletHotspotOffConnectTest.HotspotState::class])
 class HomeLastConnectionProblemTest {
     private val context: Context = RuntimeEnvironment.getApplication()
     private val opened = mutableListOf<DiPlayActivity>()
@@ -31,7 +31,7 @@ class HomeLastConnectionProblemTest {
     @Before fun setUp() {
         clearSettings()
         CarPlayBackgroundSession.clear()
-        CarHotspotOffConnectTest.HotspotState.on = true
+        TabletHotspotOffConnectTest.HotspotState.on = true
         AirPlayPersistence.saveWirelessHotspotMode(context, WirelessHotspotMode.MANUAL)
         AirPlayPersistence.saveManualHotspotSsid(context, "Car 5G")
         AirPlayPersistence.saveManualHotspotPassphrase(context, "12345678")
@@ -41,12 +41,12 @@ class HomeLastConnectionProblemTest {
         opened.forEach { runCatching { it.finish() } }
         AppAppearanceRuntime.resetForTest()
         CarPlayBackgroundSession.clear()
-        CarHotspotOffConnectTest.HotspotState.on = true
+        TabletHotspotOffConnectTest.HotspotState.on = true
         clearSettings()
     }
 
     private fun clearSettings() {
-        for (name in listOf("diplay", "xcertplay_airplay", "diplay_car_hotspot", "diplay_last_problem")) {
+        for (name in listOf("diplay", "xcertplay_airplay", "diplay_tablet_hotspot", "diplay_last_problem")) {
             context.getSharedPreferences(name, 0).edit().clear().commit()
         }
     }
@@ -108,12 +108,12 @@ class HomeLastConnectionProblemTest {
         assertTrue(shown(home).toString(), shown(home).none { it.startsWith("Last connection attempt") })
     }
 
-    @Test fun withTheCarHotspotOffHomeKeepsItsOneHotspotWarning() {
-        CarHotspotOffConnectTest.HotspotState.on = false
+    @Test fun withTheTabletHotspotOffHomeKeepsItsOneHotspotWarning() {
+        TabletHotspotOffConnectTest.HotspotState.on = false
         fail(ConnectionFailureCause.CAR_HOTSPOT_OFF)
         val home = openHome()
         val shown = shown(home)
-        assertTrue(shown.toString(), home.getString(R.string.msg_car_hotspot_off, "Car 5G") in shown)
+        assertTrue(shown.toString(), home.getString(R.string.msg_tablet_hotspot_off, "Car 5G") in shown)
         assertTrue(shown.toString(), shown.none { it.startsWith("Last connection attempt") })
     }
 
@@ -122,7 +122,7 @@ class HomeLastConnectionProblemTest {
         val lines = reportLines()
         assertTrue(lines[0], lines[0].startsWith("DiPlay ") && lines[0].endsWith(" · private beta diagnostic report"))
         assertTrue(lines[1], lines[1].matches(Regex(
-            "Last problem: Car hotspot is off \\(cause:CAR_HOTSPOT_OFF\\) at \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2} [+-]\\d{4}")))
+            "Last problem: Tablet hotspot is off \\(cause:CAR_HOTSPOT_OFF\\) at \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2} [+-]\\d{4}")))
         assertTrue(lines[2], lines[2].startsWith("Android "))
         LastConnectionProblem.clear(context)
         assertEquals("Last problem: none recorded", reportLines()[1])

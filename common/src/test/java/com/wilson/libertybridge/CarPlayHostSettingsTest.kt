@@ -184,7 +184,7 @@ class CarPlayHostSettingsTest {
         })
         assertFalse(views(page("display")).filterIsInstance<TextView>().any { it.text == "HEVC (H.265)" })
         assertTrue(views(page("advanced")).filterIsInstance<TextView>().any { it.text == "HEVC (H.265)" })
-        assertTrue(views(page("vehicle")).filterIsInstance<Button>().any {
+        assertTrue(views(page("controls")).filterIsInstance<Button>().any {
             it.text == activity.getString(R.string.settings_gesture_fingers, 3)
         })
     }
@@ -637,8 +637,8 @@ class CarPlayHostSettingsTest {
         assertTrue(field("handshakeResetInProgress") as Boolean)
     }
 
-    // #848: a fresh install keeps the default car hotspot mode, and a driver on USB never sets it up.
-    @Test fun savingWorksWhileTheUnusedCarHotspotIsNotSetUp() {
+    // #848: a fresh install keeps the default tablet hotspot mode, and a driver on USB never sets it up.
+    @Test fun savingWorksWhileTheUnusedTabletHotspotIsNotSetUp() {
         AirPlayPersistence.saveWirelessEnabled(activity, false)
         AirPlayPersistence.saveWirelessHotspotMode(activity, WirelessHotspotMode.MANUAL)
         AirPlayPersistence.saveManualHotspotSsid(activity, "")
@@ -673,7 +673,7 @@ class CarPlayHostSettingsTest {
 
     @Test fun aRejectedHotspotEditOpensTheConnectionPageWithItsMessage() {
         AirPlayPersistence.saveWirelessHotspotMode(activity, WirelessHotspotMode.MANUAL)
-        AirPlayPersistence.saveManualHotspotSsid(activity, "Car hotspot")
+        AirPlayPersistence.saveManualHotspotSsid(activity, "Tablet hotspot")
         AirPlayPersistence.saveManualHotspotPassphrase(activity, "password1")
         AirPlayPersistence.saveManualHotspotSecurity(activity, ManualHotspotSecurity.WPA2)
         invoke("loadPersistedSettings")
@@ -690,7 +690,7 @@ class CarPlayHostSettingsTest {
         val message = field("manualHotspotErrorView") as TextView
         assertEquals(View.VISIBLE, message.visibility)
         assertEquals(activity.getString(R.string.hotspot_ssid_is_required), message.text.toString())
-        assertEquals("Car hotspot", AirPlayPersistence.loadManualHotspotSsid(activity))
+        assertEquals("Tablet hotspot", AirPlayPersistence.loadManualHotspotSsid(activity))
         assertEquals(0, field("restartGeneration"))
     }
 

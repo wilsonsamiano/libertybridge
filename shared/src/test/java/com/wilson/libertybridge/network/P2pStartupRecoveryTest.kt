@@ -445,7 +445,7 @@ class P2pStartupRecoveryTest {
     @Test fun aBusyWithAKnownCauseEndsThePlanAtOnce() {
         val attempts = mutableListOf<P2pCreationRequest>()
         val asked = mutableListOf<P2pCreateRejected>()
-        val cause = IOException("refused beside the car hotspot")
+        val cause = IOException("refused beside the tablet hotspot")
         val failure = assertThrows(IOException::class.java) {
             P2pStartupRecovery.create(2437, { fail("Unexpected retry") }, busyCause = { asked += it; cause }) {
                 attempts += it
@@ -480,7 +480,7 @@ class P2pStartupRecoveryTest {
         assertEquals(0, asked)
     }
 
-    @Test fun aRefusedPromptBesideTheCarHotspotEndsWifiDirect() {
+    @Test fun aRefusedPromptBesideTheTabletHotspotEndsWifiDirect() {
         val rejection = P2pCreateRejected(WifiP2pManager.BUSY, "busy", replyMillis = 3_500)
         val failure = requireNotNull(P2pHotspotConflict.failure(33, true, rejection))
         assertEquals(WirelessStartupFailure.WIFI_DIRECT_BESIDE_HOTSPOT, failure.reason)

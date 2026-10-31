@@ -7,7 +7,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.view.View
 import android.view.ViewGroup
-import com.wilson.libertybridge.network.CarHotspotSettings
+import com.wilson.libertybridge.network.TabletHotspotSettings
 import com.wilson.libertybridge.orchestration.CarPlayRuntimeConfig
 import com.wilson.libertybridge.orchestration.CarPlayTransport
 import com.wilson.libertybridge.orchestration.WirelessHotspotMode
@@ -34,8 +34,8 @@ class ExistingWifiSettingsTest {
         activity.setTheme(android.R.style.Theme_Material_NoActionBar)
     }
 
-    @Test fun modeAndCredentialsSurviveSwitchesWithoutOverwritingCarHotspot() {
-        AirPlayPersistence.saveManualHotspotSsid(app, "Car hotspot")
+    @Test fun modeAndCredentialsSurviveSwitchesWithoutOverwritingTabletHotspot() {
+        AirPlayPersistence.saveManualHotspotSsid(app, "Tablet hotspot")
         AirPlayPersistence.saveManualHotspotPassphrase(app, "car-password")
         AirPlayPersistence.saveExistingWifiCredentials(app, "Pocket", "pocket-password")
         for (mode in listOf(WirelessHotspotMode.EXISTING_WIFI, WirelessHotspotMode.WIFI_P2P, WirelessHotspotMode.MANUAL)) {
@@ -43,11 +43,11 @@ class ExistingWifiSettingsTest {
             assertEquals(mode, AirPlayPersistence.loadWirelessHotspotMode(app))
             assertEquals("Pocket", AirPlayPersistence.loadExistingWifiSsid(app))
             assertEquals("pocket-password", AirPlayPersistence.loadExistingWifiPassphrase(app))
-            assertEquals("Car hotspot", AirPlayPersistence.loadManualHotspotSsid(app))
+            assertEquals("Tablet hotspot", AirPlayPersistence.loadManualHotspotSsid(app))
             assertEquals("car-password", AirPlayPersistence.loadManualHotspotPassphrase(app))
         }
-        CarHotspotSettings.setEnabled(app, true)
-        assertFalse(CarHotspotSettings.shouldEnable(app, true, WirelessHotspotMode.EXISTING_WIFI))
+        TabletHotspotSettings.setEnabled(app, true)
+        assertFalse(TabletHotspotSettings.shouldEnable(app, true, WirelessHotspotMode.EXISTING_WIFI))
     }
 
     @Test fun cancellingSetupPreservesModeAndSavingValidCredentialsSelectsLan() {

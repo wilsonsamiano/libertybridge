@@ -18,7 +18,7 @@ enum class WirelessStartupFailure {
     /** The head unit's Android Bluetooth accepts connections that reach no phone. */
     BLUETOOTH_UNUSABLE,
 
-    /** Android 13+ asked to turn the car hotspot off for Wi-Fi Direct, and the driver said no. */
+    /** Android 13+ asked to turn the tablet hotspot off for Wi-Fi Direct, and the driver said no. */
     WIFI_DIRECT_BESIDE_HOTSPOT;
 
     /** False when no further attempt can change what went wrong. */

@@ -7,7 +7,7 @@ import java.io.IOException
 /**
  * What wireless startup can know about the head unit's Bluetooth before it changes the Wi-Fi.
  *
- * Wireless CarPlay begins over Bluetooth. With the radio off, bringing up the car hotspot or a
+ * Wireless CarPlay begins over Bluetooth. With the radio off, bringing up the tablet hotspot or a
  * Wi-Fi Direct group first is work for an attempt that cannot succeed. On a head unit with one
  * radio it can also take the unit off the Wi-Fi it was using, and every retry does it again.
  */

@@ -2459,7 +2459,7 @@ open class CarPlayHostActivity : ComponentActivity() {
             "connection" to R.string.connection,
             "display" to R.string.settings_display,
             "navigation" to R.string.settings_navigation,
-            "vehicle" to R.string.settings_vehicle,
+            "controls" to R.string.carplay_controls,
             "diagnostics" to R.string.diagnostics,
             "advanced" to R.string.settings_advanced,
             "more" to R.string.settings_more,
@@ -2599,7 +2599,7 @@ open class CarPlayHostActivity : ComponentActivity() {
             )
         }
 
-        content = pageFor("vehicle")
+        content = pageFor("controls")
         content.addView(
             buildIdentitySettingsSection(),
             LinearLayout.LayoutParams(
@@ -2841,7 +2841,7 @@ open class CarPlayHostActivity : ComponentActivity() {
             }
         }
         gestureButton.text = settingsGestureButtonText()
-        pageFor("vehicle").addView(gestureButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
+        pageFor("controls").addView(gestureButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
         val openDiPlaySettingsButton = DiPlayButton(this).apply {
             text = "${getString(R.string.app_name)} ${getString(R.string.settings)}"
@@ -4017,7 +4017,7 @@ open class CarPlayHostActivity : ComponentActivity() {
             setPadding(0, dp(8), 0, 0)
         }
         val modes = buildList {
-            add(WirelessHotspotMode.MANUAL to getString(R.string.settings_built_in_car_hotspot_recommended))
+            add(WirelessHotspotMode.MANUAL to getString(R.string.settings_built_in_tablet_hotspot_recommended))
             add(WirelessHotspotMode.WIFI_P2P to getString(R.string.wi_fi_p2p_5_ghz))
             add(WirelessHotspotMode.EXISTING_WIFI to getString(R.string.existing_wifi_title))
         }
@@ -5738,7 +5738,7 @@ open class CarPlayHostActivity : ComponentActivity() {
             return
         }
         // Wi-Fi details the menu left alone are saved as they are. A driver on USB who never set up the
-        // car hotspot has an empty one, and checking it kept every other setting from saving (#848).
+        // tablet hotspot has an empty one, and checking it kept every other setting from saving (#848).
         if (wirelessNetworkSignature() != menuWirelessNetworkSignature && !validateManualHotspotSettings()) {
             showRejectedSetting(listOfNotNull(manualHotspotErrorView, existingWifiErrorView)
                 .firstOrNull { it.visibility == View.VISIBLE }, "Wi-Fi details")

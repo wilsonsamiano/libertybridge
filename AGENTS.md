@@ -7,9 +7,8 @@ Instructions for coding agents that work on DiPlay.
 Run the CI command from `.github/workflows/android.yml` before you report a change as done:
 
 ```sh
-./gradlew :shared:testDebugUnitTest :common:testDebugUnitTest :home:testDebugUnitTest \
-  :mobile:lintDebug :home:lintDebug :maphost:lintDebug \
-  :mobile:assembleDebug :home:assembleDebug :maphost:assembleDebug
+./gradlew :shared:testDebugUnitTest :common:testDebugUnitTest \
+  :mobile:lintDebug :mobile:assembleDebug
 ```
 
 Set `ANDROID_HOME` or `local.properties` if Gradle cannot find the SDK.
@@ -18,7 +17,7 @@ Set `ANDROID_HOME` or `local.properties` if Gradle cannot find the SDK.
 
 The Settings screen is grouped by driver goal, not by implementation.
 `SettingsCategory`, `SettingsSection` and `SettingsInformationArchitecture` at the top of
-`common/src/main/java/com/shilapi/xcertplay/DiPlayActivity.kt` define the groups.
+`common/src/main/java/com/wilson/libertybridge/DiPlayActivity.kt` define the groups.
 `SettingsLayoutPolicyTest` fails when a section has no category or has more than one.
 
 ### Choose the category

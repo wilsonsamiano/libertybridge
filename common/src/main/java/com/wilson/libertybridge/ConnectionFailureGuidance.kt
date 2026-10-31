@@ -22,8 +22,8 @@ internal object ConnectionFailureGuidance {
             ConnectionFailureCause.NO_PAIRED_IPHONE -> return R.string.on_your_iphone_open_settings_bluetooth_and_pair_with_the_c
             ConnectionFailureCause.IPHONE_NOT_CHOSEN -> return R.string.connection_help_choose_iphone
             ConnectionFailureCause.WIFI_DIRECT_CHANNEL_UNAVAILABLE -> return R.string.connection_help_wifi_direct_channel
-            ConnectionFailureCause.CAR_HOTSPOT_OFF -> return R.string.connection_help_car_hotspot_off
-            ConnectionFailureCause.CAR_HOTSPOT_DETAILS_DIFFER -> return R.string.connection_help_car_hotspot_details_differ
+            ConnectionFailureCause.CAR_HOTSPOT_OFF -> return R.string.connection_help_tablet_hotspot_off
+            ConnectionFailureCause.CAR_HOTSPOT_DETAILS_DIFFER -> return R.string.connection_help_tablet_hotspot_details_differ
             ConnectionFailureCause.HOTSPOT_INTERFACE_NOT_FOUND -> return R.string.connection_help_hotspot_interface_not_found
             ConnectionFailureCause.CAR_HOTSPOT_START_TIMED_OUT,
             ConnectionFailureCause.CAR_HOTSPOT_START_FAILED -> return R.string.connection_help_hotspot
@@ -67,14 +67,14 @@ internal object ConnectionFailureGuidance {
         ConnectionFailureCause.NO_PAIRED_IPHONE -> R.string.pair_your_iphone
         ConnectionFailureCause.IPHONE_NOT_CHOSEN -> R.string.choose_your_iphone
         ConnectionFailureCause.WIFI_DIRECT_CHANNEL_UNAVAILABLE -> R.string.wifi_direct_channel_unavailable
-        ConnectionFailureCause.CAR_HOTSPOT_OFF -> R.string.car_hotspot_is_off
-        ConnectionFailureCause.CAR_HOTSPOT_DETAILS_DIFFER -> R.string.car_hotspot_details_differ
+        ConnectionFailureCause.CAR_HOTSPOT_OFF -> R.string.tablet_hotspot_is_off
+        ConnectionFailureCause.CAR_HOTSPOT_DETAILS_DIFFER -> R.string.tablet_hotspot_details_differ
         ConnectionFailureCause.HOTSPOT_INTERFACE_NOT_FOUND -> R.string.hotspot_interface_not_found
         ConnectionFailureCause.CAR_HOTSPOT_START_TIMED_OUT -> R.string.hotspot_control_timeout
         ConnectionFailureCause.CAR_HOTSPOT_START_FAILED -> R.string.hotspot_control_failed
     }
 
-    /** The network the iPhone joins: the car hotspot, a Wi-Fi Direct group, or a shared Wi-Fi. */
+    /** The network the iPhone joins: the tablet hotspot, a Wi-Fi Direct group, or a shared Wi-Fi. */
     @StringRes
     private fun network(mode: WirelessHotspotMode): Int = when (mode) {
         WirelessHotspotMode.MANUAL -> R.string.connection_help_hotspot
@@ -82,7 +82,7 @@ internal object ConnectionFailureGuidance {
         WirelessHotspotMode.WIFI_P2P, WirelessHotspotMode.LOCAL_ONLY_HOTSPOT -> R.string.connection_help_wifi_direct
     }
 
-    /** Only the car hotspot is a network the driver joins on the iPhone. */
+    /** Only the tablet hotspot is a network the driver joins on the iPhone. */
     @StringRes
     private fun iphoneWifi(mode: WirelessHotspotMode): Int =
         if (mode == WirelessHotspotMode.MANUAL) R.string.connection_help_iphone_wifi else network(mode)

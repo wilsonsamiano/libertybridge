@@ -15,7 +15,7 @@ class HotspotModeMigrationTest {
     private val context get() = RuntimeEnvironment.getApplication()
     private val prefs get() = context.getSharedPreferences("xcertplay_airplay", Context.MODE_PRIVATE)
 
-    @Test fun oldLocalSelectionMigratesWithoutLosingCarHotspotDetails() {
+    @Test fun oldLocalSelectionMigratesWithoutLosingTabletHotspotDetails() {
         prefs.edit().putString("wireless_hotspot_mode", "LOCAL_ONLY_HOTSPOT").apply()
         AirPlayPersistence.saveManualHotspotSsid(context, "Test car")
         AirPlayPersistence.saveManualHotspotPassphrase(context, "test-password")

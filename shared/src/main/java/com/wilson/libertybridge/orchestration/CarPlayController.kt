@@ -1339,7 +1339,7 @@ class CarPlayController(
                 identity = identity,
                 advertisedHost = hostAddress.hostAddress,
                 // Bind discovery and its connect probe to the same AP/address family as AirPlay.
-                // The car hotspot previously used system NSD, which could resolve another interface
+                // The tablet hotspot previously used system NSD, which could resolve another interface
                 // or IPv6 while the listener/probe was bound to the AP's IPv4 address.
                 useInterfaceMdns = true,
                 onEvent = { event -> debugLog("wireless bonjour: ${event.diagnosticSummary()}") },
@@ -2346,29 +2346,29 @@ class CarPlayController(
     private fun startWirelessHotspot(generation: Int): WirelessHotspotInfo {
         val readyDeadline = System.nanoTime() + WirelessStartupPolicy.HOTSPOT_READY_MILLIS * 1_000_000
         val hotspotMode = config.wirelessHotspotMode
-        if (com.wilson.libertybridge.network.CarHotspotSettings.shouldEnable(
+        if (com.wilson.libertybridge.network.TabletHotspotSettings.shouldEnable(
                 appContext, config.transport == CarPlayTransport.WIRELESS, hotspotMode,
             )
         ) {
-            val result = com.wilson.libertybridge.network.CarHotspotTethering.enable(
+            val result = com.wilson.libertybridge.network.TabletHotspotTethering.enable(
                 appContext,
                 isCancelled = { isStaleWirelessRun(generation) ||
-                    !com.wilson.libertybridge.network.CarHotspotSettings.enabled(appContext) },
+                    !com.wilson.libertybridge.network.TabletHotspotSettings.enabled(appContext) },
                 timeoutMillis = ((readyDeadline - System.nanoTime()) / 1_000_000).coerceAtLeast(1),
                 log = { debugLog("generation=$generation atNs=${System.nanoTime()} $it; awaiting hotspot interface") },
             )
-            val manualFallback = result == com.wilson.libertybridge.network.CarHotspotTethering.Result.UNSUPPORTED &&
-                com.wilson.libertybridge.network.CarHotspotStatus.isEnabled(appContext) == null
-            if (result != com.wilson.libertybridge.network.CarHotspotTethering.Result.READY && !manualFallback) {
+            val manualFallback = result == com.wilson.libertybridge.network.TabletHotspotTethering.Result.UNSUPPORTED &&
+                com.wilson.libertybridge.network.TabletHotspotStatus.isEnabled(appContext) == null
+            if (result != com.wilson.libertybridge.network.TabletHotspotTethering.Result.READY && !manualFallback) {
                 throw WirelessStartupException(
-                    if (result == com.wilson.libertybridge.network.CarHotspotTethering.Result.TIMED_OUT ||
-                        result == com.wilson.libertybridge.network.CarHotspotTethering.Result.FAILED)
+                    if (result == com.wilson.libertybridge.network.TabletHotspotTethering.Result.TIMED_OUT ||
+                        result == com.wilson.libertybridge.network.TabletHotspotTethering.Result.FAILED)
                         WirelessStartupFailure.HOTSPOT_NOT_READY else WirelessStartupFailure.HOTSPOT_CONFIGURATION,
-                    "${result.diagnostic}. Open the car hotspot settings and connect again.",
+                    "${result.diagnostic}. Open the tablet hotspot settings and connect again.",
                     when (result) {
-                        com.wilson.libertybridge.network.CarHotspotTethering.Result.TIMED_OUT ->
+                        com.wilson.libertybridge.network.TabletHotspotTethering.Result.TIMED_OUT ->
                             ConnectionFailureCause.CAR_HOTSPOT_START_TIMED_OUT
-                        com.wilson.libertybridge.network.CarHotspotTethering.Result.FAILED ->
+                        com.wilson.libertybridge.network.TabletHotspotTethering.Result.FAILED ->
                             ConnectionFailureCause.CAR_HOTSPOT_START_FAILED
                         else -> null
                     })
@@ -2376,13 +2376,13 @@ class CarPlayController(
         }
         var pastOffReport = false
         if (hotspotMode == WirelessHotspotMode.MANUAL) {
-            val state = com.wilson.libertybridge.network.CarHotspotStatus.isEnabled(appContext)
-            if (com.wilson.libertybridge.network.CarHotspotSettings.reportedOff(appContext, state)) {
+            val state = com.wilson.libertybridge.network.TabletHotspotStatus.isEnabled(appContext)
+            if (com.wilson.libertybridge.network.TabletHotspotSettings.reportedOff(appContext, state)) {
                 throw WirelessStartupException(WirelessStartupFailure.HOTSPOT_CONFIGURATION,
-                    "The car hotspot is off. Turn it on in the car settings and connect again.",
+                    "The tablet hotspot is off. Turn it on in the car settings and connect again.",
                     ConnectionFailureCause.CAR_HOTSPOT_OFF)
             }
-            if (state == false) debugLog("car hotspot: Android reports it off; connecting anyway, as the driver chose")
+            if (state == false) debugLog("tablet hotspot: Android reports it off; connecting anyway, as the driver chose")
             pastOffReport = state == false
         }
         val manager: WirelessHotspotManager = when (hotspotMode) {
@@ -2392,7 +2392,7 @@ class CarPlayController(
                 LocalOnlyHotspotManager(appContext, ::debugLog)
             } else {
                 throw WirelessStartupException(WirelessStartupFailure.HOTSPOT_CONFIGURATION,
-                    "Android ${Build.VERSION.RELEASE} has no local-only hotspot. Choose Car hotspot or Wi-Fi Direct.")
+                    "Android ${Build.VERSION.RELEASE} has no local-only hotspot. Choose Tablet hotspot or Wi-Fi Direct.")
             }
             WirelessHotspotMode.EXISTING_WIFI -> ExistingWifiManager(
                 appContext, config.existingWifiSsid, config.existingWifiPassphrase, ::debugLog,
@@ -2433,9 +2433,9 @@ class CarPlayController(
             closeBestEffort(hotspotMode.name) { manager.close() }
             if (isStaleWirelessRun(generation)) throw failure
             if (pastOffReport && (failure as? WirelessStartupException)?.reason == WirelessStartupFailure.HOTSPOT_NOT_READY &&
-                com.wilson.libertybridge.network.CarHotspotSettings.hotspotNeverCameUp(
-                    appContext, com.wilson.libertybridge.network.CarHotspotStatus.isEnabled(appContext))) {
-                debugLog("car hotspot: Android still reports it off and no hotspot came up; the off warning is back")
+                com.wilson.libertybridge.network.TabletHotspotSettings.hotspotNeverCameUp(
+                    appContext, com.wilson.libertybridge.network.TabletHotspotStatus.isEnabled(appContext))) {
+                debugLog("tablet hotspot: Android still reports it off and no hotspot came up; the off warning is back")
             }
             throw IOException(
                 "Could not establish ${hotspotMode.name} hotspot: " +

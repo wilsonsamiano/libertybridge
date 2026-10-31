@@ -1,6 +1,6 @@
 package com.wilson.libertybridge
 
-import com.wilson.libertybridge.network.CarHotspotSettings
+import com.wilson.libertybridge.network.TabletHotspotSettings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -21,7 +21,7 @@ class HotspotProvisioningLogTest {
     @Before fun setup() {
         app.getSharedPreferences("xcertplay_airplay", 0).edit().clear().commit()
         ShadowLog.clear()
-        CarHotspotSettings.setConfigWrite(app, true)
+        TabletHotspotSettings.setConfigWrite(app, true)
     }
 
     @Test fun provisioningAHotspotDoesNotLogItsName() {
@@ -36,12 +36,12 @@ class HotspotProvisioningLogTest {
     }
 
     @Test fun anExistingHotspotIsNotProvisionedOrLogged() {
-        AirPlayPersistence.saveManualHotspotSsid(app, "Car hotspot")
+        AirPlayPersistence.saveManualHotspotSsid(app, "Tablet hotspot")
         AirPlayPersistence.saveManualHotspotPassphrase(app, "12345678")
         val activity = Robolectric.buildActivity(DiPlayActivity::class.java).get()
         DiPlayActivity::class.java.getDeclaredMethod("launchHotspotCredentials")
             .apply { isAccessible = true }.invoke(activity)
-        assertEquals("Car hotspot", AirPlayPersistence.loadManualHotspotSsid(app))
+        assertEquals("Tablet hotspot", AirPlayPersistence.loadManualHotspotSsid(app))
         assertTrue(ShadowLog.getLogsForTag("DiPlay-Hotspot").none { it.msg.startsWith("provisioned") })
     }
 }

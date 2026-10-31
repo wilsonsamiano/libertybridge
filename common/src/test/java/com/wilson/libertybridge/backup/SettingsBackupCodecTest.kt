@@ -7,7 +7,7 @@ import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import com.wilson.libertybridge.network.CarHotspotSettings
+import com.wilson.libertybridge.network.TabletHotspotSettings
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -66,7 +66,7 @@ class SettingsBackupCodecTest {
         assertFalse(diplay.has("page"))
         assertFalse(diplay.has("phone_name"))
         assertEquals(80, document.getJSONObject("settings").getJSONObject("carplay_picture").getInt("brightness"))
-        assertFalse(document.getJSONObject("settings").has("diplay_car_hotspot"))
+        assertFalse(document.getJSONObject("settings").has("diplay_tablet_hotspot"))
     }
 
     @Test
@@ -123,7 +123,7 @@ class SettingsBackupCodecTest {
         val document = """
             {"format": "diplay-settings", "version": 1, "settings": {
               "carplay_picture": {"brightness": 10, "contrast": 120, "saturation": 90, "warmth": -5, "planted_key": "x"},
-              "diplay_car_hotspot": {"auto_enable": true, "config_write": true, "planted_key": true}
+              "diplay_tablet_hotspot": {"auto_enable": true, "config_write": true, "planted_key": true}
             }}
         """.trimIndent()
         val outcome = SettingsBackupCodec.import(context, document.toByteArray())
@@ -133,10 +133,10 @@ class SettingsBackupCodecTest {
         assertEquals(120, prefs("carplay_picture").getInt("contrast", 0))
         assertEquals(90, prefs("carplay_picture").getInt("saturation", 0))
         assertEquals(-5, prefs("carplay_picture").getInt("warmth", 0))
-        assertTrue(prefs("diplay_car_hotspot").getBoolean("auto_enable", false))
-        assertTrue(prefs("diplay_car_hotspot").getBoolean("config_write", false))
+        assertTrue(prefs("diplay_tablet_hotspot").getBoolean("auto_enable", false))
+        assertTrue(prefs("diplay_tablet_hotspot").getBoolean("config_write", false))
         assertFalse(prefs("carplay_picture").contains("planted_key"))
-        assertFalse(prefs("diplay_car_hotspot").contains("planted_key"))
+        assertFalse(prefs("diplay_tablet_hotspot").contains("planted_key"))
     }
 
     @Test
@@ -152,22 +152,22 @@ class SettingsBackupCodecTest {
     @Test
     fun anImportedHotspotValueOfAnotherTypeNeverReachesTheReaderOfThatKey() {
         for (wrong in listOf("\"yes\"", "1", "1.5")) {
-            prefs("diplay_car_hotspot").edit().clear().commit()
-            SettingsBackupCodec.import(context, """{"format": "diplay-settings", "version": 1, "settings": {"diplay_car_hotspot": {"auto_enable": $wrong, "config_write": $wrong}}}""".toByteArray())
-            CarHotspotSettings.enabled(context) // ClassCastException when a String, Int or Float was stored
-            CarHotspotSettings.configWrite(context)
+            prefs("diplay_tablet_hotspot").edit().clear().commit()
+            SettingsBackupCodec.import(context, """{"format": "diplay-settings", "version": 1, "settings": {"diplay_tablet_hotspot": {"auto_enable": $wrong, "config_write": $wrong}}}""".toByteArray())
+            TabletHotspotSettings.enabled(context) // ClassCastException when a String, Int or Float was stored
+            TabletHotspotSettings.configWrite(context)
         }
     }
 
     @Test
     fun exportKeepsUnlistedKeysOfPictureAndHotspotFilesOut() {
         prefs("carplay_picture").edit().putInt("brightness", 5).putString("stray", "x").apply()
-        prefs("diplay_car_hotspot").edit().putBoolean("auto_enable", true).putString("stray", "x").apply()
+        prefs("diplay_tablet_hotspot").edit().putBoolean("auto_enable", true).putString("stray", "x").apply()
         val settings = JSONObject(String(SettingsBackupCodec.export(context, "0.2.22"))).getJSONObject("settings")
         assertEquals(5, settings.getJSONObject("carplay_picture").getInt("brightness"))
-        assertTrue(settings.getJSONObject("diplay_car_hotspot").getBoolean("auto_enable"))
+        assertTrue(settings.getJSONObject("diplay_tablet_hotspot").getBoolean("auto_enable"))
         assertFalse(settings.getJSONObject("carplay_picture").has("stray"))
-        assertFalse(settings.getJSONObject("diplay_car_hotspot").has("stray"))
+        assertFalse(settings.getJSONObject("diplay_tablet_hotspot").has("stray"))
     }
 
     @Test
@@ -230,7 +230,7 @@ class SettingsBackupCodecTest {
             .putString("manual_hotspot_ssid", "car-ap")
             .putFloat("ui_scale_percent", 100f)
             .apply()
-        prefs("diplay_car_hotspot").edit().putBoolean("auto_enable", true).apply()
+        prefs("diplay_tablet_hotspot").edit().putBoolean("auto_enable", true).apply()
         val document = SettingsBackupCodec.export(context, "0.2.17")
         prefs("xcertplay_airplay").edit()
             .putInt("display_fps", 30)
@@ -239,17 +239,17 @@ class SettingsBackupCodecTest {
             .putString("manual_hotspot_ssid", "changed")
             .putFloat("ui_scale_percent", 120f)
             .apply()
-        prefs("diplay_car_hotspot").edit().putBoolean("auto_enable", false).apply()
+        prefs("diplay_tablet_hotspot").edit().putBoolean("auto_enable", false).apply()
         val outcome = SettingsBackupCodec.import(context, document)
         assertEquals(false, outcome.invalid)
         val airplay = prefs("xcertplay_airplay")
         assertEquals(60, airplay.getInt("display_fps", 0))
         assertTrue(airplay.getBoolean("temporary_system_bars", false))
         assertEquals(true, airplay.getBoolean("hevc_enabled", false))
-        // The car's hotspot name is not part of a backup.
+        // The tablet's hotspot name is not part of a backup.
         assertEquals("changed", airplay.getString("manual_hotspot_ssid", ""))
         assertEquals(100f, airplay.getFloat("ui_scale_percent", 0f))
-        assertEquals(true, prefs("diplay_car_hotspot").getBoolean("auto_enable", false))
+        assertEquals(true, prefs("diplay_tablet_hotspot").getBoolean("auto_enable", false))
         assertFalse(airplay.contains("identity_private"))
     }
 }

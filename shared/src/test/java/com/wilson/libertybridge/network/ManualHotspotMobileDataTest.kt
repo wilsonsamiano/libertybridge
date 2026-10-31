@@ -11,7 +11,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
-/** The modem's mobile-data interfaces never stand in for the car hotspot (#573's search, #921's interfaces). */
+/** The modem's mobile-data interfaces never stand in for the tablet hotspot (#573's search, #921's interfaces). */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [29], manifest = Config.NONE)
 class ManualHotspotMobileDataTest {

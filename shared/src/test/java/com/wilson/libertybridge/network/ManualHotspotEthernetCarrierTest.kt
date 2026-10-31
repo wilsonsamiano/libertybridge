@@ -7,7 +7,7 @@ import java.net.Inet6Address
 import java.net.InetAddress
 
 /**
- * A head unit can carry the running car hotspot on an interface Android never reports as a tethered
+ * A head unit can carry the running tablet hotspot on an interface Android never reports as a tethered
  * Wi-Fi AP, for example the `eth0.3` VLAN of a QUALCOMM CS11 unit (#573). These checks cover the
  * rules that decide when such an interface is accepted, and that ordinary head units keep the
  * behaviour they had before.

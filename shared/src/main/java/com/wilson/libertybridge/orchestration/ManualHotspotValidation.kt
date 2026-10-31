@@ -7,7 +7,7 @@ object ManualHotspotValidation {
         if (passphrase.isEmpty()) ManualHotspotSecurity.OPEN else ManualHotspotSecurity.WPA2
 
     enum class Error(val message: String) {
-        EMPTY_NAME("Enter the car hotspot name"),
+        EMPTY_NAME("Enter the tablet hotspot name"),
         LONG_NAME("The hotspot name must be at most 32 bytes"),
         INVALID_CHARACTER("The name or password contains an invalid character"),
         PASSWORD_LENGTH("The hotspot password must be 8–63 characters"),
