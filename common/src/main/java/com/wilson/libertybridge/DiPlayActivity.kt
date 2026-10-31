@@ -1986,6 +1986,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             card.addView(button(getString(R.string.backup_open), false) { openBackup() }, matchButton(0, 60))
             card.addView(label(getString(R.string.backup_open_description), 14, MUTED).apply { setPadding(0, dp(10), 0, 0) })
         }
+        section(content, getString(R.string.support_libertybridge)) { card ->
+            card.addView(button(getString(R.string.buy_me_a_coffee), false) { openBuyMeACoffee() }, matchButton(0, 60))
+            card.addView(label(getString(R.string.support_libertybridge_description), 14, MUTED).apply { setPadding(0, dp(10), 0, 0) })
+        }
         section(content, getString(R.string.made_possible_by_open_source)) { card ->
             card.addView(label(getString(R.string.receiver_based_on_xcertplay_licensed_under_gpl_3_0_diplay), 16, MUTED))
         }
@@ -2557,6 +2561,12 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 connect(true)
             }
             .setNegativeButton(getString(R.string.cancel), null).show()
+    }
+
+    private fun openBuyMeACoffee() {
+        runCatching {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://buymeacoffee.com/wilsonsamiano")))
+        }
     }
 
     private fun openBluetoothSettings() {

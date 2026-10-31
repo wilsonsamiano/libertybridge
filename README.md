@@ -30,6 +30,8 @@ Wi-Fi network), and use the tablet's speaker or Bluetooth to your car
 stereo for audio. The tablet's rear camera is a separate project and
 is not part of this app.
 
+**Support:** if LibertyBridge is useful to you, you can support its development at [Buy Me a Coffee](https://buymeacoffee.com/wilsonsamiano).
+
 **Build from source:** see `docs/BUILD.md` — build `:mobile` only.
 Source builds contain no accessory identity; a standalone CarPlay
 connection needs the external auth assets described there. Signing

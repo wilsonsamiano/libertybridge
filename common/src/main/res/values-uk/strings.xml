@@ -642,4 +642,7 @@
     <string name="settings_hotspot_interface_description">Лише для головних пристроїв, які тримають точку доступу на мережевому інтерфейсі, що Android не вважає точкою доступу Wi-Fi, наприклад eth0.3 на деяких пристроях Geely, Lynk &amp; Co та інших Qualcomm. Залиште порожнім для автоматичного пошуку.</string>
     <string name="settings_existing_wifi_interface">Мережевий інтерфейс (необов’язково)</string>
     <string name="settings_existing_wifi_interface_description">Лише для пристроїв, де LAN-з’єднання працює на інтерфейсі, який Android не вважає Wi-Fi, наприклад USB-адаптер на eth1. Залиште порожнім для автоматичного вибору.</string>
+    <string name="support_libertybridge">Support LibertyBridge</string>
+    <string name="buy_me_a_coffee">Buy Me a Coffee</string>
+    <string name="support_libertybridge_description">If LibertyBridge is useful to you, you can support its development here.</string>
 </resources>

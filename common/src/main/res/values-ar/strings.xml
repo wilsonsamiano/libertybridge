@@ -653,4 +653,7 @@
     <string name="settings_hotspot_interface_description">لوحدات الرأس التي تشغّل نقطة الاتصال على واجهة شبكة لا يبلّغ عنها أندرويد كنقطة اتصال Wi-Fi، مثل eth0.3 في بعض وحدات Geely وLynk &amp; Co وغيرها من وحدات Qualcomm. اتركه فارغاً للعثور عليها تلقائياً.</string>
     <string name="settings_existing_wifi_interface">واجهة الشبكة (اختياري)</string>
     <string name="settings_existing_wifi_interface_description">للوحدات التي يعمل اتصال الشبكة المحلية عليها عبر واجهة لا يبلغ عنها أندرويد كـ Wi-Fi، مثل بطاقة شبكة USB على eth1. اتركه فارغاً لاختيارها تلقائياً.</string>
+    <string name="support_libertybridge">Support LibertyBridge</string>
+    <string name="buy_me_a_coffee">Buy Me a Coffee</string>
+    <string name="support_libertybridge_description">If LibertyBridge is useful to you, you can support its development here.</string>
 </resources>

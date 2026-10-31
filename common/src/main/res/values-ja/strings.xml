@@ -698,4 +698,7 @@
     <string name="settings_hotspot_interface_description">Android が Wi-Fi ホットスポットとして報告しないネットワークインターフェースでホットスポットを動かすヘッドユニット専用です。一部の Geely、Lynk &amp; Co、その他の Qualcomm ユニットでは eth0.3 です。空欄のままにすると自動で検出します。</string>
     <string name="settings_existing_wifi_interface">ネットワークインターフェース（任意）</string>
     <string name="settings_existing_wifi_interface_description">Android が Wi-Fi として報告しないネットワークインターフェース（例：USB アダプタの eth1）で LAN 接続を行うヘッドユニット専用です。空欄のままにすると自動で選択します。</string>
+    <string name="support_libertybridge">Support LibertyBridge</string>
+    <string name="buy_me_a_coffee">Buy Me a Coffee</string>
+    <string name="support_libertybridge_description">If LibertyBridge is useful to you, you can support its development here.</string>
 </resources>

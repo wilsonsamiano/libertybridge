@@ -684,4 +684,7 @@
     <string name="wifi_direct_channel_unavailable">Wi-Fi Direct tercih edilen kanalı kullanamıyor</string>
     <string name="settings_existing_wifi_interface">Ağ arayüzü (isteğe bağlı)</string>
     <string name="settings_existing_wifi_interface_description">Yalnızca yerel ağ (LAN) bağlantısı Android\'in Wi-Fi olarak bildirmediği bir arayüzde (örneğin eth1 üzerindeki bir USB ağ kartı) çalışan üniteler içindir. Otomatik seçilmesi için boş bırakın.</string>
+    <string name="support_libertybridge">Support LibertyBridge</string>
+    <string name="buy_me_a_coffee">Buy Me a Coffee</string>
+    <string name="support_libertybridge_description">If LibertyBridge is useful to you, you can support its development here.</string>
 </resources>

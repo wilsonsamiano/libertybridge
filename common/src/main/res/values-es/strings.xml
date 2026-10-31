@@ -632,4 +632,7 @@
     <string name="settings_hotspot_interface_description">Solo para unidades que ejecutan su punto de acceso en una interfaz de red que Android no informa como punto de acceso Wi-Fi, por ejemplo eth0.3 en algunas unidades Geely, Lynk &amp; Co y otros Qualcomm. Déjalo vacío para encontrarla automáticamente.</string>
     <string name="settings_existing_wifi_interface">Interfaz de red (opcional)</string>
     <string name="settings_existing_wifi_interface_description">Solo para unidades cuya conexión LAN usa una interfaz que Android no informa como Wi-Fi, por ejemplo un adaptador USB en eth1. Déjalo vacío para elegirla automáticamente.</string>
+    <string name="support_libertybridge">Support LibertyBridge</string>
+    <string name="buy_me_a_coffee">Buy Me a Coffee</string>
+    <string name="support_libertybridge_description">If LibertyBridge is useful to you, you can support its development here.</string>
 </resources>
