@@ -737,7 +737,7 @@ class AirPlaySession(
     private fun acceptEvent(server: ServerSocket) {
         try {
             val expected = peerAddress ?: throw IOException("control peer unknown")
-            val socket = server.acceptFrom(expected) { debugLog("airplay event rejected sender outside the control session") }
+            val socket = server.acceptFrom(expected) { debugLog("airplay event rejected sender $it outside the control session") }
             socket.setSoLinger(true, 0)
             // Avoid Nagle coalescing on this interactive event connection: small HID/event writes
             // need not wait for earlier unacknowledged data.

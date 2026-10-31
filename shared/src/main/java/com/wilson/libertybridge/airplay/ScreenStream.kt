@@ -63,7 +63,7 @@ class ScreenStream(
 
     private fun accept(bound: ServerSocket) {
         try {
-            val accepted = bound.acceptFrom(expectedPeer) { onDiagnostic("Video: rejected sender outside the control session") }
+            val accepted = bound.acceptFrom(expectedPeer) { onDiagnostic("Video: rejected sender $it outside the control session") }
             socket = accepted
             run(accepted)
         } catch (error: Exception) {

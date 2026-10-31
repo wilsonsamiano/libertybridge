@@ -24,14 +24,24 @@ internal fun isInternalAirPlayPeer(peer: InetAddress, local: InetAddress): Boole
 
 /**
  * Accepts until a connection comes from [expected], the control-session peer; others are closed unread.
- * Java reports an IPv4-mapped peer as its IPv4 address and ignores the scope of a link-local one,
- * so a plain address comparison covers the hotspot, Wi-Fi Direct and USB NCM paths.
+ * Java usually reports an IPv4-mapped peer as its IPv4 address, but some runtimes report the mapped
+ * form (::ffff:127.0.0.1) instead, so the comparison normalizes mapped addresses on both sides
+ * rather than trusting [InetAddress.equals]. A mapped form and its IPv4 address are the same peer;
+ * ::1 and 127.0.0.1 stay distinct loopbacks and are never equated.
  */
 internal fun ServerSocket.acceptFrom(expected: InetAddress, onRejected: (InetAddress?) -> Unit = {}): Socket {
+    val wanted = normalizedHostAddress(expected)
     while (true) {
         val socket = accept()
-        if (socket.inetAddress == expected) return socket
+        if (normalizedHostAddress(socket.inetAddress) == wanted) return socket
         onRejected(socket.inetAddress)
         runCatching { socket.close() }
     }
+}
+
+/** Unwraps an IPv4-mapped IPv6 address (::ffff:a.b.c.d) to its IPv4 form; anything else unchanged. */
+internal fun normalizedHostAddress(address: InetAddress?): String? {
+    val host = address?.hostAddress ?: return null
+    val mapped = host.removePrefix("::ffff:").removePrefix("::FFFF:")
+    return if (mapped != host && mapped.count { it == '.' } == 3) mapped else host
 }

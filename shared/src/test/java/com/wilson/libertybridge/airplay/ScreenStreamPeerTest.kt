@@ -25,6 +25,7 @@ class ScreenStreamPeerTest {
     private val frames = LinkedBlockingQueue<ByteArray>()
     private val configs = LinkedBlockingQueue<ByteArray>()
     private val closes = LinkedBlockingQueue<String>()
+    private val diagnostics = java.util.concurrent.CopyOnWriteArrayList<String>()
 
     private val listener = object : ScreenStream.Listener {
         override fun onFrame(naluBytes: ByteArray) { frames.add(naluBytes) }
@@ -107,14 +108,14 @@ class ScreenStreamPeerTest {
     @Test
     fun aStrangerHoldingAnOpenConnectionDoesNotBlockTheControlPeer() {
         val ipv6Peer = InetAddress.getByName("::1")
-        val stream = ScreenStream(key, ipv6Peer)
+        val stream = ScreenStream(key, ipv6Peer) { diagnostics += it }
         try {
             val port = stream.listen(listener)
             Socket(InetAddress.getByName("127.0.0.1"), port).use {
                 Thread.sleep(SETTLE_MILLIS)
                 Socket(ipv6Peer, port).use { peer ->
                     peer.getOutputStream().write(sealedFrame(0, byteArrayOf(0x65, 0x22)))
-                    assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x65, 0x22), frames.poll(3, TimeUnit.SECONDS))
+                    assertArrayEquals("peer frame missing; diagnostics=$diagnostics closes=$closes", byteArrayOf(0, 0, 0, 1, 0x65, 0x22), frames.poll(3, TimeUnit.SECONDS))
                 }
             }
         } finally { stream.close() }
