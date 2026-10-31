@@ -30,7 +30,7 @@ accessory specification detail.
 
 A controlled comparison used the following receiver and phone:
 
-- DiPlay **0.2.12**, package `com.shihab.diplay`, original installed release.
+- DiPlay **0.2.12**, package `com.wilson.libertybridge`, original installed release.
 - iPhone **8 Plus / iOS 14.0.1**, with hotspot Auto-Join enabled.
 - OnePlus **7T Pro / Android 13 (API 33)**, WPA2 hotspot, actual **5220 MHz /
   channel 44**. This is a receiver interoperability observation outside DiPlay's

@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "com.shilapi.xcertplay"
+    namespace = "com.wilson.libertybridge"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.shilapi.xcertplay"
+        applicationId = "com.wilson.libertybridge"
         minSdk = 28
         targetSdk = 37
         versionCode = 1201

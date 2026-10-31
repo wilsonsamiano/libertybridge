@@ -53,7 +53,7 @@
             android:value="1" />
 
         <service
-            android:name="com.shilapi.xcertplay.shared.MyCarAppService"
+            android:name="com.wilson.libertybridge.shared.MyCarAppService"
             android:exported="true">
             <intent-filter>
                 <action android:name="androidx.car.app.CarAppService" />
@@ -63,13 +63,13 @@
         </service>
 
         <service
-            android:name="com.shilapi.xcertplay.network.CarPlayVpnService"
+            android:name="com.wilson.libertybridge.network.CarPlayVpnService"
             android:permission="android.permission.BIND_VPN_SERVICE"
             android:exported="false" />
 
         <!-- Only Telecom can bind it; it carries no UI or audio, see PhoneAudioRoute. -->
         <service
-            android:name="com.shilapi.xcertplay.telecom.PhoneAudioConnectionService"
+            android:name="com.wilson.libertybridge.telecom.PhoneAudioConnectionService"
             android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE"
             android:exported="true">
             <intent-filter>

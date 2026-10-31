@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.shilapi.xcertplay.host"
+    namespace = "com.wilson.libertybridge.host"
     compileSdk {
         version = release(37)
     }

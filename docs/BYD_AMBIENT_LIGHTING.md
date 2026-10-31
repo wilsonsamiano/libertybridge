@@ -84,7 +84,7 @@ The patch contains source and focused tests only. No local diagnostic logs, vehi
 ## Local checks
 
 ```sh
-./gradlew --offline :shared:testDebugUnitTest --tests 'com.shilapi.xcertplay.media.Ambient*' --tests 'com.shilapi.xcertplay.hud.BydAmbientLightPolicyTest' --tests 'com.shilapi.xcertplay.hud.AmbientWorkerOwnerLockTest' --tests 'com.shilapi.xcertplay.adb.LocalAdbInteractiveTest'
+./gradlew --offline :shared:testDebugUnitTest --tests 'com.wilson.libertybridge.media.Ambient*' --tests 'com.wilson.libertybridge.hud.BydAmbientLightPolicyTest' --tests 'com.wilson.libertybridge.hud.AmbientWorkerOwnerLockTest' --tests 'com.wilson.libertybridge.adb.LocalAdbInteractiveTest'
 ./gradlew --offline :shared:compileDebugKotlin :common:compileDebugKotlin
 ```
 

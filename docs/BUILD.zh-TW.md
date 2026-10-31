@@ -50,7 +50,7 @@ sdk.dir=C:/Users/YOUR_NAME/AppData/Local/Android/Sdk
 ./gradlew :mobile:assembleDebug
 ```
 
-一般原始碼 APK 不包含配件認證身分，除非自行提供執行時認證素材；因此它可用於介面驗證，但獨立 CarPlay 連線需要下節素材。Debug 套件名稱為 `com.shihab.diplay.hudtest`，正式版為 `com.shihab.diplay`。
+一般原始碼 APK 不包含配件認證身分，除非自行提供執行時認證素材；因此它可用於介面驗證，但獨立 CarPlay 連線需要下節素材。Debug 套件名稱為 `com.wilson.libertybridge.hudtest`，正式版為 `com.wilson.libertybridge`。
 
 ## Android Studio 執行
 
@@ -90,14 +90,14 @@ runtime-assets/
 Windows PowerShell：
 
 ```powershell
-$env:DIPLAY_AUTH_ASSETS_DIR = 'C:\path\to\runtime-assets'
+$env:LIBERTYBRIDGE_AUTH_ASSETS_DIR = 'C:\path\to\runtime-assets'
 .\gradlew.bat :mobile:assembleStandaloneDebug
 ```
 
 Linux／macOS：
 
 ```sh
-DIPLAY_AUTH_ASSETS_DIR=/absolute/path/to/runtime-assets ./gradlew :mobile:assembleStandaloneDebug
+LIBERTYBRIDGE_AUTH_ASSETS_DIR=/absolute/path/to/runtime-assets ./gradlew :mobile:assembleStandaloneDebug
 ```
 
 任一必要檔案缺少或為空時，任務會停止；建置也會拒絕非預期的憑證容器。輸出為 `mobile/build/outputs/apk/debug/mobile-debug.apk`。請確認 APK 中的 `assets/offline-mfi/identity.pk8` 與 `assets/offline-mfi/certificate.p7b` 符合選定素材。使用相同簽章更新既有測試程式，才能保留設定。
@@ -108,7 +108,7 @@ DIPLAY_AUTH_ASSETS_DIR=/absolute/path/to/runtime-assets ./gradlew :mobile:assemb
 
 | 變數 | 內容 |
 | --- | --- |
-| `DIPLAY_AUTH_ASSETS_DIR` | 認證素材目錄的絕對路徑 |
+| `LIBERTYBRIDGE_AUTH_ASSETS_DIR` | 認證素材目錄的絕對路徑 |
 | `ANDROID_KEYSTORE_PATH` | Android 簽章 keystore 路徑 |
 | `ANDROID_KEYSTORE_PASSWORD` | keystore 密碼 |
 | `ANDROID_KEY_ALIAS` | 簽章金鑰別名 |

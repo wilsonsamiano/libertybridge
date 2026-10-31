@@ -45,7 +45,7 @@ mobile、home、maphost 的 `lintDebug` 與 `assembleDebug` 也全部通過。�
 
 ## Android 手機實機檢查
 
-同日透過已授權的 USB ADB 在 V2130 手機上安裝 `mobile-debug.apk`（套件 `com.shihab.diplay.hudtest`，版本 `0.2.18-hud-test`），安裝結果為 `Success`。
+同日透過已授權的 USB ADB 在 V2130 手機上安裝 `mobile-debug.apk`（套件 `com.wilson.libertybridge.hudtest`，版本 `0.2.18-hud-test`），安裝結果為 `Success`。
 
 手機使用 Android 14（API 34）、1080 × 2400 螢幕、440 dpi，系統語言為 `zh-Hant-TW`。本次維持手機原本的螢幕、字體及系統語言設定。
 

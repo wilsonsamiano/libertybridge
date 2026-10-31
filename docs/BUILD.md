@@ -73,8 +73,8 @@ Check that this file exists:
 mobile/build/outputs/apk/debug/mobile-debug.apk
 ```
 
-The debug application ID is `com.shihab.diplay.hudtest`.
-The release application ID is `com.shihab.diplay`.
+The debug application ID is `com.wilson.libertybridge.hudtest`.
+The release application ID is `com.wilson.libertybridge`.
 
 The source APK contains no accessory identity unless you supply runtime authentication assets.
 Standalone CarPlay needs these assets to connect to an iPhone.
@@ -121,11 +121,11 @@ Use only the intended runtime files in this directory.
 Keep the directory and its private key outside Git.
 The build rejects unexpected credential containers in APK assets.
 
-1. Set `DIPLAY_AUTH_ASSETS_DIR` to the absolute directory path.
+1. Set `LIBERTYBRIDGE_AUTH_ASSETS_DIR` to the absolute directory path.
 2. Run the standalone debug task.
 
 ```sh
-DIPLAY_AUTH_ASSETS_DIR=/absolute/path/to/runtime-assets ./gradlew :mobile:assembleStandaloneDebug
+LIBERTYBRIDGE_AUTH_ASSETS_DIR=/absolute/path/to/runtime-assets ./gradlew :mobile:assembleStandaloneDebug
 ```
 
 The task stops if either required file is absent or empty.
@@ -146,7 +146,7 @@ Set these environment variables locally:
 
 | Variable | Value |
 | --- | --- |
-| `DIPLAY_AUTH_ASSETS_DIR` | Absolute path to the runtime assets directory |
+| `LIBERTYBRIDGE_AUTH_ASSETS_DIR` | Absolute path to the runtime assets directory |
 | `ANDROID_KEYSTORE_PATH` | Path to your Android signing keystore |
 | `ANDROID_KEYSTORE_PASSWORD` | Keystore password |
 | `ANDROID_KEY_ALIAS` | Signing key alias |

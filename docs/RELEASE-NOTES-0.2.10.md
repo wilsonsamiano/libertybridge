@@ -67,7 +67,7 @@ A boot snapshot records the latest actual `BOOT_COMPLETED` receipt, the saved bo
 
 The combined source checks passed **528 unit tests**, with zero failures/errors and one explicit macOS wildcard-binding skip. Mobile, Home and map-host lint and debug builds passed; mobile release lint and the signed release build passed. Tests cover the review fixes for video URLs/redirects, artwork queue bounds and stale sessions, USB frame preservation, port/socket ownership, call audio-mode restoration, and diagnostic privacy/queue bounds. Lint warnings remain.
 
-The APK is `com.shihab.diplay`, version code **29**, signed with the same certificate as 0.2.9. The release includes `DiPlay-0.2.10.apk`, corresponding `DiPlay-0.2.10-source.zip` and `SHA256SUMS.txt`. Runtime authentication assets are explicitly selected for the APK; Android signing keys and accessory identities are excluded from Git and the source archive.
+The APK is `com.wilson.libertybridge`, version code **29**, signed with the same certificate as 0.2.9. The release includes `DiPlay-0.2.10.apk`, corresponding `DiPlay-0.2.10-source.zip` and `SHA256SUMS.txt`. Runtime authentication assets are explicitly selected for the APK; Android signing keys and accessory identities are excluded from Git and the source archive.
 
 No new on-car validation was performed for this release. Previous hardware tests and automated regression coverage do not establish compatibility on every head unit. See [validation details](VALIDATION.md).
 

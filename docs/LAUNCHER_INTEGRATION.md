@@ -46,16 +46,16 @@ In DiPlay settings, under the dashboard map, turn on **Dashboard map on the cent
 - **Draw over other apps**: the settings screen offers it, or over ADB:
 
   ```bash
-  adb shell appops set com.shihab.diplay SYSTEM_ALERT_WINDOW allow
+  adb shell appops set com.wilson.libertybridge SYSTEM_ALERT_WINDOW allow
   ```
 
 - **Usage Access**, so the card shows only on home screens. Without it, the card shows over every app:
 
   ```bash
-  adb shell appops set com.shihab.diplay GET_USAGE_STATS allow
+  adb shell appops set com.wilson.libertybridge GET_USAGE_STATS allow
   ```
 
-(Test builds use the package `com.shihab.diplay.hudtest`.)
+(Test builds use the package `com.wilson.libertybridge.hudtest`.)
 
 The card is a separate decoder for the same stream, so the dashboard keeps its map. While the card shows the map, "Dashboard map only in Small and Full navi" does not pause the stream. If a launcher embeds the map (section 3), the card stays hidden.
 
@@ -75,7 +75,7 @@ A complete working example is the sample app in [`samples/maphost`](../samples/m
 
 DiPlay exports a bound service. You talk to it with [`Messenger`](https://developer.android.com/reference/android/os/Messenger), so you need no AIDL or library. Every message you send must set `replyTo` to your own `Messenger`.
 
-Service action: `com.shihab.diplay.action.EMBED_MAP`. The package differs between release and test builds, so find the service by its action.
+Service action: `com.wilson.libertybridge.action.EMBED_MAP`. The package differs between release and test builds, so find the service by its action.
 
 | Direction | `what` | Data (`Bundle`) | Meaning |
 |---|---|---|---|
@@ -97,7 +97,7 @@ The map is 8:3. If your view has another shape, DiPlay fills it and crops the ed
    ```xml
    <queries>
        <intent>
-           <action android:name="com.shihab.diplay.action.EMBED_MAP" />
+           <action android:name="com.wilson.libertybridge.action.EMBED_MAP" />
        </intent>
    </queries>
    ```
@@ -105,7 +105,7 @@ The map is 8:3. If your view has another shape, DiPlay fills it and crops the ed
 2. Find and bind the service:
 
    ```kotlin
-   val intent = Intent("com.shihab.diplay.action.EMBED_MAP")
+   val intent = Intent("com.wilson.libertybridge.action.EMBED_MAP")
    val info = packageManager.queryIntentServices(intent, 0).firstOrNull()?.serviceInfo
        ?: return // DiPlay is not installed
    intent.setClassName(info.packageName, info.name)
@@ -160,7 +160,7 @@ Turn it on under **Advanced → Home-screen bubble (experimental)** and allow **
 apps**. The settings card says whether that permission is granted, and it can be given over ADB:
 
 ```bash
-adb shell appops set com.shihab.diplay SYSTEM_ALERT_WINDOW allow
+adb shell appops set com.wilson.libertybridge SYSTEM_ALERT_WINDOW allow
 ```
 
 Behaviour:
@@ -188,13 +188,13 @@ It runs without system privileges. BYD's home stays installed, and the **BYD hom
 - **Widgets.** A launcher needs the owner's consent to bind widgets. BYD head units have no consent screen, so allow it once over ADB:
 
   ```bash
-  adb shell appwidget grantbind --package com.diplay.home --user 0
+  adb shell appwidget grantbind --package com.wilson.libertybridge.home --user 0
   ```
 
 - **Making it the home screen.** Pick it as the default home app, or over ADB:
 
   ```bash
-  adb shell cmd package set-home-activity com.diplay.home/.HomeActivity
+  adb shell cmd package set-home-activity com.wilson.libertybridge.home/.HomeActivity
   ```
 
 - **Going back to BYD's home:**

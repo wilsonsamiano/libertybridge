@@ -114,7 +114,7 @@ Thanks to @aloaiza-dev for this series. A normal session behaves as before; the 
 
 ## Updating and reporting problems
 
-Install the official APK over the previous public release to preserve settings and pairing records. The package remains `com.shihab.diplay`; release packaging verifies the existing signing certificate. Source builds omit runtime authentication assets by default; see [building from source](BUILD.md).
+Install the official APK over the previous public release to preserve settings and pairing records. The package remains `com.wilson.libertybridge`; release packaging verifies the existing signing certificate. Source builds omit runtime authentication assets by default; see [building from source](BUILD.md).
 
 Reproduce remaining problems on **0.2.22**, then open **Settings → Diagnostics → Save diagnostic report**. Android 10+ normally saves to **Downloads/DiPlay**; on Android 7.0–9, DiPlay asks for storage access and saves there too. If it is unavailable, follow the save confirmation and use **View report** or **Share**. Review the `.txt` and attach it as a file to a matching [existing issue](https://github.com/shihabal3amri/DiPlay/issues) or [new issue](https://github.com/shihabal3amri/DiPlay/issues/new/choose); a report pasted as text is cut off by GitHub. Connection reports require the diagnostic log. Reports are not uploaded automatically.
 

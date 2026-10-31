@@ -75,7 +75,7 @@ The review fixes end zoom/joystick mode when their relevant route or primary scr
 
 ## Diagnostic export and issue reports
 
-The export fixes ([#185](https://github.com/shihabal3amri/DiPlay/pull/185), [#219](https://github.com/shihabal3amri/DiPlay/pull/219)) support head units with no working document picker or Downloads provider. Android 10+ normally saves to **Downloads/DiPlay**; Android 9 uses a document picker. If unavailable, the confirmation identifies the fallback path under **Android/data/com.shihab.diplay/files/diagnostic-reports/**, or private DiPlay storage if external storage is also unavailable. Use **View report** or **Share** from the confirmation. Reports are not uploaded automatically.
+The export fixes ([#185](https://github.com/shihabal3amri/DiPlay/pull/185), [#219](https://github.com/shihabal3amri/DiPlay/pull/219)) support head units with no working document picker or Downloads provider. Android 10+ normally saves to **Downloads/DiPlay**; Android 9 uses a document picker. If unavailable, the confirmation identifies the fallback path under **Android/data/com.wilson.libertybridge/files/diagnostic-reports/**, or private DiPlay storage if external storage is also unavailable. Use **View report** or **Share** from the confirmation. Reports are not uploaded automatically.
 
 Please report a fresh reproduction from **0.2.12**, even if you previously supplied logs:
 
@@ -88,7 +88,7 @@ Export improvements make evidence available; they do not establish the underlyin
 
 ## Validation and release packaging
 
-Final measured results, package/signature checks and remaining hardware tests are recorded in [VALIDATION.md](VALIDATION.md). The release package is `com.shihab.diplay`, version **0.2.12**, version code **31**, minimum SDK **28** and target SDK **37**. Wi-Fi Direct requires Android 10+. Release assets include the production-signed APK, its corresponding tagged source archive, and SHA-256 checksums.
+Final measured results, package/signature checks and remaining hardware tests are recorded in [VALIDATION.md](VALIDATION.md). The release package is `com.wilson.libertybridge`, version **0.2.12**, version code **31**, minimum SDK **28** and target SDK **37**. Wi-Fi Direct requires Android 10+. Release assets include the production-signed APK, its corresponding tagged source archive, and SHA-256 checksums.
 
 The existing release signing certificate and explicitly selected runtime authentication inputs are preserved to support installing over 0.2.11. Android signing keys and runtime identities remain outside Git and the source archive. Source-only CI builds do not provision an identity. The APK continues to use the experimental accessory identity described in [BUILD.md](BUILD.md) and the existing notices; it is not Apple-certified, and future iOS acceptance is not guaranteed.
 

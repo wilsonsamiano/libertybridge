@@ -4,21 +4,21 @@ plugins {
 }
 
 // Optional local-only input. CI and ordinary source builds contain no accessory identity.
-val localAuthenticationAssets = providers.environmentVariable("DIPLAY_AUTH_ASSETS_DIR")
+val localAuthenticationAssets = providers.environmentVariable("LIBERTYBRIDGE_AUTH_ASSETS_DIR")
     .orNull?.let { file(it).canonicalFile }
 
 android {
-    namespace = "com.shilapi.xcertplay"
+    namespace = "com.wilson.libertybridge"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.shihab.diplay"
+        applicationId = "com.wilson.libertybridge"
         minSdk = 24
         targetSdk = 37
-        versionCode = 41
-        versionName = "0.2.22"
+        versionCode = 1
+        versionName = "0.1.0"
 
     }
 
@@ -39,8 +39,8 @@ android {
 
     buildTypes {
         debug {
-            applicationIdSuffix = ".hudtest"
-            versionNameSuffix = "-hud-test"
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
         }
         release {
             optimization {
@@ -105,7 +105,7 @@ val verifyStandaloneAuthentication by tasks.registering {
     val directory = localAuthenticationAssets
     doLast {
         check(directory != null) {
-            "Standalone car builds require DIPLAY_AUTH_ASSETS_DIR; assembleDebug alone is source-only."
+            "Standalone car builds require LIBERTYBRIDGE_AUTH_ASSETS_DIR; assembleDebug alone is source-only."
         }
         check(listOf("identity.pk8", "certificate.p7b").all {
             directory.resolve("offline-mfi/$it").let { file -> file.isFile && file.length() > 0 }
