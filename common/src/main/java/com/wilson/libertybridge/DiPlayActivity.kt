@@ -101,6 +101,7 @@ internal enum class SettingsCategory {
 internal enum class SettingsSection {
     CARPLAY_CONTROLS,
     CONNECTION_SETUP,
+    TABLET_HOTSPOT,
     DIAGNOSTICS,
     AUTOMATIC_CONNECTION,
     USB_CONNECTION,
@@ -123,6 +124,7 @@ internal object SettingsInformationArchitecture {
             SettingsSection.CONNECTION_SETUP,
             SettingsSection.AUTOMATIC_CONNECTION,
             SettingsSection.USB_CONNECTION,
+            SettingsSection.TABLET_HOTSPOT,
             SettingsSection.PERMISSIONS_AND_HELP,
         ),
         SettingsCategory.DISPLAY to setOf(SettingsSection.DISPLAY_AND_PERFORMANCE, SettingsSection.CARPLAY_CONTROLS),
@@ -1599,6 +1601,12 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             })
             toggle(card, getString(R.string.right_hand_drive), getString(R.string.place_carplay_s_controls_closer_to_the_driver), AirPlayPersistence.loadRightHandDrive(this)) { AirPlayPersistence.saveRightHandDrive(this, it); markReconnectNeeded() }
         }
+        filteredSection(content, SettingsSection.CONNECTION_SETUP,
+            getString(R.string.connection_setup), R.drawable.ic_dp_connection) { card ->
+            // The label this card used to carry was swept as dead when the section was stripped;
+            // the button alone is the entry point, so no new string is introduced for it.
+            card.addView(button(getString(R.string.open_connection_setup), false, ::openConnectionSetupFromSettings), matchButton(12, 60))
+        }
         filteredSection(content, SettingsSection.DIAGNOSTICS,
             getString(R.string.diagnostics), R.drawable.ic_dp_diagnostics) { card ->
             exportButton = button(if (exportInProgress) getString(R.string.saving_report) else getString(R.string.save_diagnostic_report), false) {
@@ -1682,6 +1690,27 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 if (!AirPlayPersistence.loadWirelessEnabled(this)) markReconnectNeeded()
             }
             card.addView(label(getString(R.string.settings_usb_charging_description), 14, MUTED))
+        }
+        // The tablet hotspot switch only exists in MANUAL mode: in EXISTING_WIFI mode there is
+        // nothing to turn on, so the whole section (and its search title) stays out of the way.
+        // Tablets use Android's "Modify system settings" access for this; no ADB probe runs here.
+        if (AirPlayPersistence.loadWirelessHotspotMode(this) == WirelessHotspotMode.MANUAL) filteredSection(content, SettingsSection.TABLET_HOTSPOT,
+            getString(R.string.settings_tablet_hotspot_control), R.drawable.ic_dp_permissions) { card ->
+            toggle(card, getString(R.string.auto_tablet_hotspot_title),
+                getString(R.string.settings_auto_tablet_hotspot_system_description), TabletHotspotSettings.enabled(this)) { enabled ->
+                TabletHotspotSettings.setEnabled(this, enabled)
+                if (!enabled) startupHotspotCancelled = true
+                else if (!TabletHotspotTethering.permitted(this)) openWriteSettingsAccess()
+            }
+            val permitted = TabletHotspotTethering.permitted(this)
+            card.addView(label(getString(if (permitted) R.string.settings_write_settings_granted
+                else R.string.settings_write_settings_missing), 14, if (permitted) READY else MUTED).apply {
+                setPadding(0, dp(6), 0, dp(4))
+            })
+            if (!permitted) {
+                card.addView(button(getString(R.string.settings_write_settings_allow), false) { openWriteSettingsAccess() },
+                    matchButton(8, 54))
+            }
         }
         filteredSection(content, SettingsSection.DISPLAY_AND_PERFORMANCE,
             getString(R.string.display_and_performance), R.drawable.ic_dp_display) { card ->
@@ -2292,30 +2321,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         AirPlayPersistence.loadWirelessHotspotMode(this) == WirelessHotspotMode.MANUAL &&
             TabletHotspotSettings.reportedOff(this, com.wilson.libertybridge.network.TabletHotspotStatus.isEnabled(this)) &&
             !(TabletHotspotSettings.enabled(this) && TabletHotspotTethering.permitted(this))
-
-    /**
-     * Other head units: starting the hotspot needs only Android's "Modify system settings" access
-     * (WRITE_SETTINGS), which the driver allows on the system screen. No ADB is involved.
-     */
-    private fun systemHotspotSettings(parent: LinearLayout) {
-        section(parent, getString(R.string.settings_tablet_hotspot_control), R.drawable.ic_dp_permissions) { card ->
-            toggle(card, getString(R.string.auto_tablet_hotspot_title),
-                getString(R.string.settings_auto_tablet_hotspot_system_description), TabletHotspotSettings.enabled(this)) { enabled ->
-                TabletHotspotSettings.setEnabled(this, enabled)
-                if (!enabled) startupHotspotCancelled = true
-                else if (!TabletHotspotTethering.permitted(this)) openWriteSettingsAccess()
-            }
-            val permitted = TabletHotspotTethering.permitted(this)
-            card.addView(label(getString(if (permitted) R.string.settings_write_settings_granted
-                else R.string.settings_write_settings_missing), 14, if (permitted) READY else MUTED).apply {
-                setPadding(0, dp(6), 0, dp(4))
-            })
-            if (!permitted) {
-                card.addView(button(getString(R.string.settings_write_settings_allow), false) { openWriteSettingsAccess() },
-                    matchButton(8, 54))
-            }
-        }
-    }
 
     private fun openWriteSettingsAccess() =
         openSystem(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:$packageName")))
@@ -4548,7 +4553,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 }
                 child is LinearLayout && child.orientation == LinearLayout.VERTICAL -> {
                     normalizeSpacing(child, isCard = false)
-                    lp.topMargin = 0; lp.bottomMargin = 0
+                    // A nested group keeps its trailing gap when a control follows it, so the
+                    // group does not touch the control after it; otherwise it closes up.
+                    lp.topMargin = 0
+                    lp.bottomMargin = dp(if (isControl(next)) CONTROL_GAP_DP else 0)
                 }
                 // Any other row (an icon preview, a status line) gets the same gap; the card heading keeps its padding.
                 i > 0 || !isCard -> { lp.topMargin = 0; lp.bottomMargin = dp(CONTROL_GAP_DP) }
