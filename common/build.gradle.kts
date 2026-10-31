@@ -27,11 +27,13 @@ android {
         // The UI suite covers several SDKs and locale-specific resource sandboxes. 1g sat right at the
         // ceiling: adding one more Robolectric class pushed a full run into OutOfMemoryError in
         // unrelated tests, on CI and locally both, which is what BydSettingsDecoyTest measured.
-        // Keep the 2g heap, but restart the executor every 25 classes: on small hosts the
-        // accumulated Robolectric sandboxes otherwise grow until the OS SIGKILLs the run (137).
+        // Keep the 2g heap, but restart the executor often and never run two at once: on
+        // small hosts the accumulated Robolectric sandboxes otherwise grow until the OS
+        // SIGKILLs the run (137), and parallel executors only multiply that pressure.
         unitTests.all {
             it.maxHeapSize = "2g"
-            it.forkEvery = 25
+            it.forkEvery = 10
+            it.maxParallelForks = 1
         }
     }
 }

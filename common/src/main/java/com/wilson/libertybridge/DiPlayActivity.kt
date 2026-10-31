@@ -1606,6 +1606,24 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             // The label this card used to carry was swept as dead when the section was stripped;
             // the button alone is the entry point, so no new string is introduced for it.
             card.addView(button(getString(R.string.open_connection_setup), false, ::openConnectionSetupFromSettings), matchButton(12, 60))
+            // The auth-target choice stays: it is the way back to LOCAL for a target set
+            // elsewhere, and switching it must not start a connection on its own.
+            val mfiTargets = listOf(MfiTarget.LOCAL, MfiTarget.USB_CH341)
+            val storedMfiTarget = AirPlayPersistence.loadMfiTarget(this)
+            if (storedMfiTarget in mfiTargets) {
+                choice(card, getString(R.string.mfi_certificate_signing_target), listOf(
+                    getString(R.string.local_offline),
+                    getString(R.string.usb_ch341),
+                ), mfiTargets.indexOf(storedMfiTarget)) { index ->
+                    val target = mfiTargets[index]
+                    AirPlayPersistence.saveMfiTarget(this, target)
+                    setupError = runCatching { DiPlayBootstrap.ensure(this, target) }.exceptionOrNull()?.let {
+                        android.util.Log.e("DiPlaySetup", "CarPlay authentication could not be loaded", it)
+                        getString(R.string.setup_error_auth)
+                    }
+                }
+                card.addView(label(getString(R.string.settings_mfi_target_description), 14, MUTED))
+            }
         }
         filteredSection(content, SettingsSection.DIAGNOSTICS,
             getString(R.string.diagnostics), R.drawable.ic_dp_diagnostics) { card ->

@@ -60,7 +60,7 @@ internal object CrashRecord {
     }
 
     private fun ownFrame(frame: StackTraceElement): Boolean =
-        frame.className.startsWith("com.shilapi.") || frame.className.startsWith("com.shihab.")
+        frame.className.startsWith("com.wilson.libertybridge.")
 
     fun report(context: Context): String {
         val file = File(context.filesDir, FILE)

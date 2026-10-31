@@ -6,7 +6,7 @@ import org.junit.Test
 
 /** Source scan for the "Settings layout" rules in AGENTS.md. */
 class SettingsLayoutSourceRulesTest {
-    private val sources = File("src/main/java/com/shilapi/xcertplay").listFiles { f -> f.extension == "kt" }!!
+    private val sources = File("src/main/java/com/wilson/libertybridge").listFiles { f -> f.extension == "kt" }!!
 
     @Test fun blockGapsUseTheNamedConstant() {
         val literal = Regex("""(bottom|top)Margin = dp\((16|18|20)\)""")
