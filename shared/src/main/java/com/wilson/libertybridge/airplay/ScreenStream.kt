@@ -63,17 +63,28 @@ class ScreenStream(
 
     private fun accept(bound: ServerSocket) {
         try {
-            val accepted = bound.acceptFrom(expectedPeer) { onDiagnostic("Video: rejected sender $it outside the control session") }
-            onDiagnostic("Video: accepted sender ${accepted.inetAddress}")
-            socket = accepted
-            run(accepted)
+            while (!closed.get()) {
+                val accepted = bound.acceptFrom(expectedPeer) { onDiagnostic("Video: rejected sender $it outside the control session") }
+                onDiagnostic("Video: accepted sender ${accepted.inetAddress}")
+                socket = accepted
+                // A connection from the expected peer that carries zero bytes (a port probe, or a
+                // stale shadow connection in a test harness) is not a video stream: ending the
+                // session on it would starve the real peer still waiting in the backlog, so keep
+                // listening instead. A peer that sent anything ends the session normally.
+                if (run(accepted) > 0 || closed.get() || lastRunFailure != null) break
+                onDiagnostic("Video: empty connection from expected peer, listening again")
+            }
         } catch (error: Exception) {
             if (!closed.get()) listener.onClosed(error)
         }
     }
 
-    private fun run(sock: Socket) {
+    private var lastRunFailure: Throwable? = null
+
+    private fun run(sock: Socket): Int {
+        lastRunFailure = null
         var failure: Throwable? = null
+        var received = 0
         val stats = StreamReceiveStats("video", onDiagnostic)
         try {
             val input = sock.getInputStream()
@@ -85,17 +96,22 @@ class ScreenStream(
                 val body = readFully(input, bodySize) ?: break
                 val arrivalNanos = System.nanoTime()
                 stats.received(HEADER_LEN + bodySize)
+                received++
                 onMessage(header, body, stats, arrivalNanos)
                 stats.processed()
             }
         } catch (error: Exception) {
             failure = error
+            lastRunFailure = error
         } finally {
             stats.flush(ended = true)
             if (socket === sock) socket = null
             safeClose(sock)
-            if (!closed.get()) listener.onClosed(failure)
+            // A clean empty connection is not a session end (accept() keeps listening), so it
+            // must not report onClosed; a real failure or a session with packets still does.
+            if (!closed.get() && (received > 0 || failure != null)) listener.onClosed(failure)
         }
+        return received
     }
 
     private fun onMessage(header: ByteArray, body: ByteArray, stats: StreamReceiveStats, arrivalNanos: Long) {

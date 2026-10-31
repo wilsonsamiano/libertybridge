@@ -90,7 +90,18 @@ class LocalAdbApprovalTest {
             val input = socket.getInputStream()
             val output = socket.getOutputStream()
             fun send(packet: AdbPacket) = output.write(packet.encode())
-            assertEquals(AdbPacket.CNXN, AdbPacket.read(input).command)
+            // The test server listens on a random loopback port, and loopback probers (this host
+            // sends "GET / HTTP/1.1") occasionally connect first. A connection whose opening
+            // packet is not ADB at all is a probe, not the ADB client: ignore it instead of
+            // recording a failure. A real client bug still fails the test, via the shell result,
+            // commands, or key-offer assertions below.
+            val first = try {
+                AdbPacket.read(input)
+            } catch (error: java.io.IOException) {
+                println("ApprovalServer: ignoring non-ADB connection: ${error.message}")
+                return
+            }
+            assertEquals(AdbPacket.CNXN, first.command)
             send(AdbPacket(AdbPacket.AUTH, AdbPacket.AUTH_TOKEN, 0, ByteArray(20)))
             assertEquals(AdbPacket.AUTH_SIGNATURE, AdbPacket.read(input).arg0)
             val connected = AdbPacket(AdbPacket.CNXN, AdbPacket.VERSION, AdbPacket.MAX_PAYLOAD,
