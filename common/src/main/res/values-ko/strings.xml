@@ -83,7 +83,7 @@
     <string name="safe_area_mapping_summary">안전 영역: %1$d x %2$d, (%3$d, %4$d) 위치, 전체 크기 %5$d x %6$d</string>
     <string name="settings_android9_compat">Android 9(API 28)에서는 다음 설정을 사용할 수 없어 숨겨집니다:\n• HEVC 소프트웨어 디코더 — 대신 하드웨어 디코딩을 사용합니다.</string>
     <string name="settings_mfi_address_hint">주소는 http:// 또는 https://로 시작해야 합니다. 토큰은 선택 사항이며 Authorization bearer token으로 전송됩니다.</string>
-    <string name="app_name">DiPlay</string>
+    <string name="app_name">LibertyBridge</string>
     <string name="language_section_title">언어</string>
     <string name="language_app_language">앱 언어</string>
     <string name="language_system_default">시스템 기본값</string>
