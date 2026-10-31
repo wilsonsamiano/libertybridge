@@ -78,7 +78,6 @@ import com.wilson.libertybridge.orchestration.WirelessHotspotMode
 import com.wilson.libertybridge.settings.SettingsTheme
 import com.wilson.libertybridge.settings.SettingsWidgets
 import com.wilson.libertybridge.setup.SetupGuide
-import com.wilson.libertybridge.transport.EvChargingConnectors
 import com.wilson.libertybridge.update.BackgroundUpdateScheduler
 import com.wilson.libertybridge.update.UpdateApkExport
 import com.wilson.libertybridge.update.UpdateAvailability
@@ -148,9 +147,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private var appearanceUpdatesResumed = false
     private var appearanceRenderPending = false
     private var appearanceButtonFocusPending = false
-    private var windowLearning: WindowKeyLearning? = null
-    private val windowLearningPresses = WheelKeyPresses()
-    private val endWindowLearning = Runnable { cancelKeyLearning() }
     private var page = "home"
     internal var ambientSupportCheck: (Context) -> java.util.concurrent.CompletableFuture<Boolean> = AmbientMusicController::checkSupport
     private var settingsCategory = SettingsCategory.OVERVIEW
@@ -268,7 +264,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
     private val iconCrop = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode != RESULT_OK) return@registerForActivityResult
-        refreshCarButton()
         carButtonSaved()
     }
     private val export = registerForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
@@ -339,7 +334,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             ?: if (setupError == null && SetupGuide.shouldOpenOnLaunch(SetupGuide.seen(this),
                     DiPlayPreferences.phoneAddress(this) != null)) "setup" else "home"
         render()
-        scheduleAutomaticVehicleValidation()
         handleWirelessRecovery()
         if (consumeBluetoothAutoConnectIntent(intent)) {
             if (initialLaunch) {
@@ -365,7 +359,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             page = "home"; render(); openProjection(); return
         }
         page = requestedPage(intent) ?: "home"; render()
-        scheduleAutomaticVehicleValidation()
         handleWirelessRecovery()
         if (consumeBluetoothAutoConnectIntent(intent)) {
             if (initialLaunch) {
@@ -480,7 +473,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         appearanceObserverRemoval?.invoke()
         appearanceObserverRemoval = null
         handler.removeCallbacks(appearancePoll)
-        cancelKeyLearning()
         pausedForAdbSwitchChange = adbSwitchChangePending
         handler.removeCallbacks(tick)
         super.onPause()
@@ -493,7 +485,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         handler.removeCallbacks(appearancePoll)
         hotspotJoinControls?.close()
         cancelUsbPermissionSetup()
-        cancelKeyLearning()
         stopBackupServer()
         adbCheckInProgress = false
         super.onDestroy()
@@ -566,8 +557,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         enforceInterfaceSize()
         refreshAppearance()
         applyWindowAppearance()
-        // A pending assignment belongs to the widgets being replaced, never to another page.
-        if (!appearanceOnly) cancelKeyLearning()
         // The backup server lives only while its page is shown, however the driver left it.
         if (page != "backup" && backupServer != null) stopBackupServer()
         val focusSnapshot = if (appearanceOnly) {
@@ -1580,7 +1569,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         }
         content.addView(caution, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(SETTINGS_BLOCK_GAP_DP) })
         renderSections(content, SettingsInformationArchitecture.sectionsByCategory.getValue(SettingsCategory.ADVANCED))
-        advancedVehicleDataSettings(content)
     }
 
     private fun renderSections(
@@ -3299,54 +3287,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             .show()
     }
 
-    /** Optional guidance-volume routing through the existing wheel service. */
-    private fun cancelKeyLearning() {
-        handler.removeCallbacks(endWindowLearning)
-        val cancelled = windowLearning?.cancelled
-        windowLearning = null
-        cancelled?.invoke()
-        applyPendingAppearanceRender()
-    }
-
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action != KeyEvent.ACTION_DOWN && event.action != KeyEvent.ACTION_UP) return super.dispatchKeyEvent(event)
-        val action = windowLearningPresses.filter(
-            Triple(event.deviceId, event.keyCode, event.scanCode),
-            event.action == KeyEvent.ACTION_DOWN, event.repeatCount == 0,
-        ) {
-            val learning = windowLearning
-            if (learning == null || event.keyCode == KeyEvent.KEYCODE_BACK) return@filter WheelZoomKeys.Action.PASS
-            if (learning.role == WheelZoomSettings.Role.MEDIA_PLAY_PAUSE &&
-                CarPlayRemoteKeys.isProtectedNavigationKey(event.keyCode)) {
-                toast(getString(R.string.wheel_media_navigation_reserved))
-                return@filter WheelZoomKeys.Action.CONSUME
-            }
-            val enabled = when (learning.role) {
-                WheelZoomSettings.Role.SIRI -> WheelZoomSettings.siriKey(this)
-                WheelZoomSettings.Role.MEDIA_PLAY_PAUSE -> WheelZoomSettings.mediaPlayPause(this)
-                else -> false
-            }
-            if (inCall(this) || !enabled) {
-                cancelKeyLearning()
-                return@filter WheelZoomKeys.Action.PASS
-            }
-            handler.removeCallbacks(endWindowLearning)
-            windowLearning = null
-            val key = WheelKey.of(event)
-            val taken = WheelZoomSettings.conflict(this, learning.role, key)
-            if (taken != null) {
-                Log.i(TAG, "${learning.role} key $key refused: it is the $taken key (learnt in the settings window)")
-                learning.refused(taken)
-            } else {
-                WheelZoomSettings.assign(this, learning.role, key)
-                Log.i(TAG, "${learning.role} key is now $key (learnt in the settings window)")
-                learning.done(key)
-            }
-            WheelZoomKeys.Action.CONSUME
-        }
-        return action != WheelZoomKeys.Action.PASS || super.dispatchKeyEvent(event)
-    }
-
     /** The 0.2.9 Dashboard song setting, shown once: in the BYD navigation card, or under Advanced vehicle data. */
     private fun adbOffText(): Int {
         // #1002: on DiLink UI7.0 the developer-options switch can stay on while nothing listens on 5555.
@@ -4650,7 +4590,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         appearanceRenderPending = true
         appearanceButtonFocusPending = appearanceButtonFocusPending || focusAppearanceButton
         if (!appearanceUpdatesResumed || shouldDeferAppearanceRender(
-                windowKeyLearning = windowLearning != null,
+                windowKeyLearning = false,
                 serviceKeyLearning = false,
             )
         ) return
@@ -4668,7 +4608,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         handler.post {
             if (appearanceRenderPending && appearanceUpdatesResumed &&
                 !shouldDeferAppearanceRender(
-                    windowKeyLearning = windowLearning != null,
+                    windowKeyLearning = false,
                     serviceKeyLearning = false,
                 )
             ) {

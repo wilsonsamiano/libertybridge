@@ -1,5 +1,7 @@
 package com.wilson.libertybridge
 
+import com.wilson.libertybridge.hud.VoiceKeyPair
+
 import android.app.AlertDialog
 import android.Manifest
 import android.content.ActivityNotFoundException
@@ -29,6 +31,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
+import android.media.AudioManager
 import android.media.MediaCodecList
 import android.media.MediaFormat
 import android.net.Uri
@@ -147,27 +150,11 @@ open class CarPlayHostActivity : ComponentActivity() {
         val hotspotStatus: HotspotStatus,
     )
 
-    private data class PendingAssignedSiriDoublePress(
-        val physicalKey: Triple<Int, Int, Int>,
-        val assignedKey: WheelKey,
-        val keyCode: Int,
-        val session: AirPlaySession,
-        val confirmedAtMillis: Long,
-        val intervalMillis: Int,
-        val triggerDelayMillis: Int,
-    )
-
     private var connectionPanel: View? = null
     private var connectionInstructionsView: TextView? = null
     private var connectionHelpView: TextView? = null
     private var wifiRecoveryButton: View? = null
     private var reconnectAttempts = 0
-    private val siriKey = WheelSiriKey()
-    private val siriKeyPresses = WheelKeyPresses()
-    private val mediaKeyPresses = WheelKeyPresses()
-    private var doubleSiriFirstPressWasInCall = false
-    private var pendingDoubleSiri: PendingAssignedSiriDoublePress? = null
-    private var delayedDoubleSiri: PendingAssignedSiriDoublePress? = null
     private val legacySiriPresses = mutableSetOf<Triple<Int, Int, Int>>()
     private val startupRetryBudget = WirelessStartupRetryBudget()
     private var startupRetryStopped = false
@@ -643,16 +630,6 @@ open class CarPlayHostActivity : ComponentActivity() {
     private var failurePendingAfterMenu: CarPlayStatus.Failed? = null
     private val shuttingDown = AtomicBoolean(false)
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val requestDelayedAssignedSiri = Runnable {
-        val pending = delayedDoubleSiri
-        delayedDoubleSiri = null
-        if (pending == null || !WheelZoomSettings.siriDoublePress(this) ||
-            !WheelZoomSettings.isSiriKey(this, pending.assignedKey) ||
-            activeAirPlaySession !== pending.session || inCall(this)) return@Runnable
-        val sent = controller?.requestSiri() == true
-        appendLog("Siri: assigned double key ${pending.keyCode} sent=$sent " +
-            "intervalMs=${pending.intervalMillis} delayMs=${pending.triggerDelayMillis}")
-    }
     private var sidePanel: LinearLayout? = null
     // Everything on the panel's card, in one layout so the resize blur covers it as a whole.
     private var sidePanelContents: LinearLayout? = null
@@ -1256,31 +1233,6 @@ open class CarPlayHostActivity : ComponentActivity() {
             }
             return true
         }
-        // A release/repeat belongs to its original press even if a call, session or setting changed.
-        if (downOrUp && siriKeyPresses.hasConsumedPress(physicalKey)) {
-            siriKeyPresses.filter(physicalKey, event.action == KeyEvent.ACTION_DOWN, event.repeatCount == 0) {
-                WheelZoomKeys.Action.PASS
-            }
-            return true
-        }
-        // Foreground fallback for head units with no accessible wheel-key service. The service
-        // owns the same physical key when its input filter is active, so only one route fires.
-        // Leave all existing remote/keyboard events completely untouched when the opt-in
-        // remap is off. A consumed release still belongs to its original down after toggling.
-        val remappedMedia = if (downOrUp &&
-            (WheelZoomSettings.mediaPlayPause(this) || mediaKeyPresses.hasConsumedPress(physicalKey))) mediaKeyPresses.filter(
-            physicalKey, event.action == KeyEvent.ACTION_DOWN, event.repeatCount == 0,
-        ) {
-            if (activeAirPlaySession == null || inCall(this) ||
-                !WheelZoomSettings.isMediaPlayPauseKey(this, WheelKey.of(event))) {
-                WheelZoomKeys.Action.PASS
-            } else {
-                val sent = controller?.sendMediaButton(CarPlayMediaButton.PLAY_PAUSE) == true
-                appendLog("Media: assigned wheel key ${event.keyCode} -> CarPlay play/pause sent=$sent")
-                WheelZoomKeys.Action.CONSUME
-            }
-        } else WheelZoomKeys.Action.PASS
-        if (remappedMedia != WheelZoomKeys.Action.PASS) return true
         if (!menuOpen &&
             (AndroidTvInputMode.shouldUseKnobAsPrimaryInput(this) ||
                 CarPlayRemoteKeys.fromExternalController(event, AirPlayPersistence.loadExternalController(this))) &&
@@ -1295,105 +1247,25 @@ open class CarPlayHostActivity : ComponentActivity() {
         }
 
 
-        // The wheel key service, when it runs, takes an assigned Siri key before this window sees it.
-        val wheelKey = WheelKey.of(event)
-        val assignedKey = WheelZoomSettings.isSiriKey(this, wheelKey)
-        val doublePress = WheelZoomSettings.siriDoublePress(this)
-        val activeSession = activeAirPlaySession
-        val calling = inCall(this)
-        pendingDoubleSiri?.let { pending ->
-            if (!doublePress || !WheelZoomSettings.isSiriKey(this, pending.assignedKey) ||
-                activeSession !== pending.session) {
-                pendingDoubleSiri = null
-                doubleSiriFirstPressWasInCall = false
-                siriKey.reset()
-            }
-        }
-        if (downOrUp && assignedKey && doublePress && activeSession != null) {
-            var confirmed = false
-            var confirmedPair = false
-            var doubleAction: WheelSiriKey.DoublePressAction? = null
-            val handledByService = false
-            if (handledByService && event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
-                pendingDoubleSiri = null
-                doubleSiriFirstPressWasInCall = false
-                siriKey.reset()
-            }
-            if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0 &&
-                pendingDoubleSiri?.physicalKey == physicalKey) {
-                pendingDoubleSiri = null
-            }
-            if (!handledByService && event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
-                val intervalMillis = WheelZoomSettings.siriDoublePressIntervalMillis(this)
-                doubleAction = siriKey.onDoublePress(event.eventTime, intervalMillis.toLong())
-                if (doubleAction == WheelSiriKey.DoublePressAction.FIRST) {
-                    doubleSiriFirstPressWasInCall = calling
-                }
-                confirmedPair = doubleAction == WheelSiriKey.DoublePressAction.CONFIRMED
-                confirmed = confirmedPair && !doubleSiriFirstPressWasInCall
-                if (confirmedPair) doubleSiriFirstPressWasInCall = false
-                if (confirmed) {
-                    pendingDoubleSiri = PendingAssignedSiriDoublePress(
-                        physicalKey,
-                        wheelKey,
-                        event.keyCode,
-                        activeSession,
-                        event.eventTime,
-                        intervalMillis,
-                        WheelZoomSettings.siriTriggerDelayMillis(this),
-                    )
-                }
-            }
-            val matchingRelease = pendingDoubleSiri?.takeIf {
-                event.action == KeyEvent.ACTION_UP && it.physicalKey == physicalKey
-            }
-            val release = matchingRelease?.takeIf {
-                event.eventTime - it.confirmedAtMillis in 0L..WheelSiriKey.MAX_SECOND_PRESS_MILLIS
-            }
-            if (matchingRelease != null) pendingDoubleSiri = null
-            if (release != null) {
-                delayedDoubleSiri = release
-                mainHandler.removeCallbacks(requestDelayedAssignedSiri)
-                mainHandler.postDelayed(requestDelayedAssignedSiri, release.triggerDelayMillis.toLong())
-            }
-            return super.dispatchKeyEvent(event)
-        }
-        val assignedAction = if (downOrUp) siriKeyPresses.filter(
-            physicalKey, event.action == KeyEvent.ACTION_DOWN, event.repeatCount == 0,
-        ) {
-            if (activeAirPlaySession == null || !assignedKey || inCall(this)) {
-                return@filter WheelZoomKeys.Action.PASS
-            }
-            if (siriKey.opens(event.eventTime)) {
-                val message = "Siri: assigned key ${event.keyCode} sent=${controller?.requestSiri() == true}"
-                appendLog(message)
-            }
-            WheelZoomKeys.Action.CONSUME
-        } else WheelZoomKeys.Action.PASS
-        if (assignedAction != WheelZoomKeys.Action.PASS) return true
-        if (downOrUp && assignedKey) return super.dispatchKeyEvent(event)
 
-        // Steering-wheel next/previous, claimed by the CarPlay screen itself. BYD gives these keys to
-        // whichever window is in front, and this is the only route that reaches CarPlay without the
-        // wheel key service — which a head unit with no ADB cannot turn on at all.
+        // Media next/previous, claimed by the CarPlay screen itself.
         val mediaPress = CarPlayMediaButton.forCarPlayWindow(
             event.keyCode,
             sessionActive = activeAirPlaySession != null,
-            inCall = inCall(this),
+            inCall = isInCall(),
         )
         if (downOrUp && mediaPress != null) {
-            // A media button is a tap, and BYD sends each tap as an instant down/up pair: send once,
-            // on the press. The release is swallowed rather than passed on, or BYD's own player would
+            // A media button is a tap, sent once, on the press. The release is
+            // swallowed rather than passed on, or the system player would
             // receive an unpaired key.
             if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
                 val sent = controller?.sendMediaButton(mediaPress) == true
-                appendLog("Media: wheel key ${event.keyCode} -> CarPlay $mediaPress sent=$sent")
+                appendLog("Media: key ${event.keyCode} -> CarPlay $mediaPress sent=$sent")
             }
             return true
         }
 
-        // Keep DiPlay's existing steering-wheel/voice-key Siri handling intact.
-        if (CarPlayMediaButton.isShortVoiceKey(event.keyCode) && WheelZoomSettings.siriLongPressOnly(this)) return true
+        // Voice-key Siri handling.
         if (!CarPlayMediaButton.opensSiri(event.keyCode)) return super.dispatchKeyEvent(event)
         if (event.action == KeyEvent.ACTION_DOWN) legacySiriPresses.add(physicalKey)
         if (event.action == KeyEvent.ACTION_UP) {
@@ -1401,6 +1273,10 @@ open class CarPlayHostActivity : ComponentActivity() {
         }
         return true
     }
+
+    /** A call is active when the audio mode is not normal (native Bluetooth calls use it too). */
+    private fun isInCall(): Boolean =
+        (getSystemService(Context.AUDIO_SERVICE) as? AudioManager)?.mode?.let { it != AudioManager.MODE_NORMAL } ?: false
 
     private fun requestLegacySiri(keyCode: Int) {
         val sent = VoiceKeyPair.shared.allowGenericKey(android.os.SystemClock.uptimeMillis()) && controller?.requestSiri() == true
@@ -1537,10 +1413,6 @@ open class CarPlayHostActivity : ComponentActivity() {
         removeVideoSurfaceProbe()
         fallbackVideoView?.holder?.removeCallback(fallbackSurfaceCallback)
         mainHandler.removeCallbacks(refreshTurnOverlay)
-        mainHandler.removeCallbacks(requestDelayedAssignedSiri)
-        doubleSiriFirstPressWasInCall = false
-        pendingDoubleSiri = null
-        delayedDoubleSiri = null
         AirPlayPersistence.overlaySettingsListener = null
         getSystemService(android.hardware.display.DisplayManager::class.java)
         mainHandler.removeCallbacks(hideIdleCenterMap)
