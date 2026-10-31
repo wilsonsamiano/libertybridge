@@ -36,8 +36,6 @@ import com.wilson.libertybridge.airplay.AirPlaySessionListener
 import com.wilson.libertybridge.airplay.PairingStore
 import com.wilson.libertybridge.airplay.VideoInCar
 import com.wilson.libertybridge.airplay.VideoPlaybackDelivery
-import com.wilson.libertybridge.hud.BydBluetoothSuspend
-import com.wilson.libertybridge.hud.BydNavigationOutputs
 import com.wilson.libertybridge.iap2.session.Iap2Session
 import com.wilson.libertybridge.mfi.Iap2MfiAuthenticationClient
 import com.wilson.libertybridge.mfi.MfiAuthenticationClient
@@ -172,15 +170,12 @@ class CarPlayController(
     private val savePairRecord: (LockdownPairRecord) -> Unit = {},
     private val clearPairRecord: () -> Unit = {},
     private val locationProvider: Iap2LocationProvider? = null,
-    private val vehicleStatusProvider: com.wilson.libertybridge.transport.VehicleStatusProvider? = null,
 ) : Closeable {
     init {
         require(!config.locationReportingEnabled || locationProvider != null) {
             "A location provider is required when location reporting is enabled"
         }
         WifiScanPause.restoreIfNeeded(context.applicationContext)
-        BydNavigationOutputs.start(context.applicationContext)
-        BydNavigationOutputs.setClusterStreamControl(::applyClusterUi)
     }
 
     private enum class Phase { IDLE, MFI, WIRELESS, IPHONE, REENUMERATION, DATAPATHS, CONTROL }
@@ -242,14 +237,7 @@ class CarPlayController(
     @Volatile private var mux: Iap2UsbMuxHost? = null
     @Volatile private var csm: Iap2Session? = null
     @Volatile private var activeSession: AirPlaySession? = null
-    @Volatile private var requestedDashboardUrl: String? = airPlayConfig.cluster?.initialUrl
-    private val clusterUiLock = Any()
-    private var clusterUiStream: Pair<AirPlaySession, Int>? = null
-    private var clusterUiShown = true
     // Immutable snapshots keep accessibility key filtering away from the network-writing UI lock.
-    @Volatile private var clusterUiVisibility: Pair<Pair<AirPlaySession, Int>, Boolean>? = null
-    @Volatile private var dashboardMapOutputVisible = false
-    private val dashboardMapEpoch = AtomicInteger()
     private val playbackStatus = com.wilson.libertybridge.media.CarPlayPlaybackStatus()
 
     private val albumReplayLock = Any()
@@ -369,8 +357,6 @@ class CarPlayController(
             if (currentCornerMask?.session !== session) currentCornerMask = null
             val replacement = activeSession !== session
             if (replacement) {
-                BydNavigationOutputs.start(appContext)
-                BydNavigationOutputs.carPlaySessionStarted()
                 com.wilson.libertybridge.glance.CarPlayGlance.setConnected(true)
                 // The gear may have changed since /info.
                 if (videoListener != null) {
@@ -379,16 +365,6 @@ class CarPlayController(
                 }
             }
             activeSession = session
-            val btPrefs = appContext.getSharedPreferences("xcertplay_airplay", android.content.Context.MODE_PRIVATE)
-            if (btPrefs.getBoolean("bt_suspend_during_carplay", false)) {
-                // close() marks [closed], and a closing session marks itself before onSessionEnded
-                // clears it, ahead of each resume; the pause checks all three under resume's lock.
-                BydBluetoothSuspend.suspend(appContext, this@CarPlayController, btSuspendDelayMs(btPrefs),
-                    log = { debugLog(it) }) {
-                    !closed && activeSession === session && !session.isClosed
-                }
-            }
-            if (replacement) restoreDashboardContent(session)
             debugLog(
                 "AirPlay session active controller=${session.controllerId ?: "unknown"} " +
                     "peer=${session.host}",
@@ -401,8 +377,6 @@ class CarPlayController(
             if (activeSession === session) {
                 activeSession = null
                 synchronized(albumReplayLock) { initialArtworkReplay = null }
-                BydNavigationOutputs.endNow(preserveTurnOverlay = !closed && config.transport == CarPlayTransport.WIRELESS)
-                BydBluetoothSuspend.resume(appContext, this@CarPlayController) { debugLog(it) }
                 com.wilson.libertybridge.glance.CarPlayGlance.setConnected(false)
                 videoListener?.onVideoSessionEnded()
                 synchronized(playbackStatus) {
@@ -631,48 +605,6 @@ class CarPlayController(
     }
 
     /** Sends one CarPlay media-button press (an [com.wilson.libertybridge.airplay.AirPlayHid] media index). */
-    /** The host reports its physical cluster surface independently of the centre-map pause policy. */
-    fun setDashboardMapOutputVisible(visible: Boolean) {
-        val next = visible && !closed
-        if (dashboardMapOutputVisible == next) return
-        dashboardMapOutputVisible = next
-        dashboardMapEpoch.incrementAndGet()
-    }
-
-    /** Immutable stream geometry retained when a new host adopts this background controller. */
-    fun configuredClusterSize(): Pair<Int, Int>? = airPlayConfig.cluster?.let { it.widthPixels to it.heightPixels }
-
-    /** A visible physical map and its session/stream generation; null for a paused/virtual/turn-card route. */
-    fun dashboardMapRoute(): Any? {
-        val session = activeSession ?: return null
-        val content = session.clusterContentRoute() ?: return null
-        val stream = content.first
-        val route = session to stream
-        val visibility = clusterUiVisibility
-        val shown = visibility?.takeIf { it.first == route }?.second ?: true
-        if (!DashboardMapEligibility.permits(content.second,
-                dashboardMapOutputVisible, stream, shown, closed)) return null
-        return Triple(session, stream, dashboardMapEpoch.get() to content.third)
-    }
-
-    /** Whether the wheel can currently control the visible dashboard map. */
-    fun dashboardMapStreaming(): Boolean = dashboardMapRoute() != null
-
-    /** One zoom step for the dashboard map, as the car's own zoom controls send it. */
-    fun zoomDashboardMap(zoomIn: Boolean): Boolean {
-        val route = dashboardMapRoute() ?: return false
-        val session = activeSession ?: return false
-        return try {
-            touchExecutor.execute {
-                if (activeSession === session && dashboardMapRoute() == route) session.changeMapZoomLevel(zoomIn)
-            }
-            true
-        } catch (_: Exception) {
-            false
-        }
-    }
-
-    /** Opens Siri on the iPhone, as the car's voice button does in CarPlay. */
     fun requestSiri(): Boolean {
         if (closed) return false
         val session = activeSession ?: return false
@@ -718,19 +650,15 @@ class CarPlayController(
             closed = true
             // Order cancellation with address-preference commits and generation replacement.
             wirelessGeneration.incrementAndGet()
-            dashboardMapOutputVisible = false
         }
         firstTcpWatchdog?.terminate()
         wiredStartWatchdog?.terminate()
-        BydBluetoothSuspend.resume(appContext, this) { debugLog(it) }
         startupTimer.shutdownNow()
         (hotspot as? ManualHotspotManager)?.close()
         val teardownStarted = System.nanoTime()
         connectionDiagnostic("teardown begin transport=${config.transport}")
         videoGate?.close()
-        BydNavigationOutputs.endNow()
         com.wilson.libertybridge.glance.CarPlayGlance.setConnected(false)
-        BydNavigationOutputs.clearClusterStreamControl(::applyClusterUi)
         closeReceivers()
         availabilityPollGeneration.incrementAndGet()
         permissionPollGeneration += 1
@@ -781,82 +709,6 @@ class CarPlayController(
         }
     }
 
-    /**
-     * Switches what the dashboard shows to another of the iPhone's cluster contents without reconnecting;
-     * a paused map stays paused and comes back with the new content. Completion reports delivery
-     * or a retained paused selection; the settings UI can reconnect when delivery fails.
-     */
-    fun showDashboardContent(url: String, onComplete: (Boolean) -> Unit) {
-        val session = activeSession
-        val stream = session?.clusterStream ?: 0
-        if (closed || session == null || stream <= 0) {
-            onComplete(false)
-            return
-        }
-        try {
-            touchExecutor.execute {
-                val sent = synchronized(clusterUiLock) {
-                    if (closed || activeSession !== session || session.clusterStream != stream) {
-                        return@synchronized false
-                    }
-                    // A cluster stream DiPlay has not paused yet starts with the map drawn.
-                    val shown = clusterUiShown || clusterUiStream != session to stream
-                    val delivered = session.setClusterUrl(url, send = shown)
-                    val sent = delivered && !closed && activeSession === session && session.clusterStream == stream
-                    // The wheel zoom follows what the dashboard shows now, so zoom mode starts over.
-                    if (sent) {
-                        requestedDashboardUrl = url
-                        dashboardMapEpoch.incrementAndGet()
-                    }
-                    debugLog("Dashboard content: $url sent=$sent")
-                    sent
-                }
-                onComplete(sent)
-            }
-        } catch (_: java.util.concurrent.RejectedExecutionException) {
-            onComplete(false)
-        }
-    }
-
-    /** A new phone inherits the last accepted selection; all command work stays off its listener. */
-    private fun restoreDashboardContent(session: AirPlaySession) {
-        try {
-            touchExecutor.execute {
-                synchronized(clusterUiLock) {
-                    if (closed || activeSession !== session) return@synchronized
-                    val url = requestedDashboardUrl ?: return@synchronized
-                    val stream = session.clusterStream
-                    val shown = clusterUiShown || clusterUiStream != session to stream
-                    val restored = session.restoreClusterUrl(url, send = shown)
-                    if (restored && !closed && activeSession === session && session.clusterStream == stream && stream > 0) {
-                        dashboardMapEpoch.incrementAndGet()
-                    }
-                }
-            }
-        } catch (_: java.util.concurrent.RejectedExecutionException) {
-            // Closing the controller also discards the pending restore.
-        }
-    }
-
-    // Each new cluster stream starts with the map drawn (its initialURL); send only real changes.
-    private fun applyClusterUi(shown: Boolean) = synchronized(clusterUiLock) {
-        val session = activeSession ?: return@synchronized
-        val stream = session.clusterStream.takeIf { it > 0 } ?: return@synchronized
-        if (clusterUiStream != session to stream) {
-            clusterUiStream = session to stream
-            clusterUiShown = true
-            clusterUiVisibility = (session to stream) to true
-        }
-        if (shown == clusterUiShown && (!shown || session.clusterUrl() != null)) return@synchronized
-        if (session.setClusterUiShown(shown)) {
-            clusterUiShown = shown
-            clusterUiVisibility = (session to stream) to shown
-            dashboardMapEpoch.incrementAndGet()
-            debugLog("Cluster map: ${if (shown) "showUI, the cluster shows the map" else "stopUI, the cluster hides the map"}")
-        }
-    }
-
-    /** Waits for USB, iAP2, MFi and VPN teardown; intended for a non-main lifecycle thread. */
     fun awaitClosed(timeoutMillis: Long): Boolean {
         require(timeoutMillis >= 0) { "timeoutMillis must not be negative" }
         return try {
@@ -867,9 +719,8 @@ class CarPlayController(
         }
     }
 
-    // HUD (SOME/IP) and cluster (AMap broadcast) keep separate state so one failing cannot stall the other.
+    // HUD (SOME/IP) state is kept separate so one failure cannot stall the other.
     private fun onRouteFrame(frame: com.wilson.libertybridge.iap2.wire.Iap2Frame) {
-        BydNavigationOutputs.onFrame(frame)
         com.wilson.libertybridge.glance.CarPlayGlance.onFrame(frame)
         synchronized(playbackStatus) {
             val previousPlaying = playbackStatus.playing
@@ -1344,7 +1195,7 @@ class CarPlayController(
             BluetoothRadioCheck.blockerForState(
                 adapterPresent = activeAdapter != null,
                 state = activeAdapter?.state,
-                pausedByDiPlay = BydBluetoothSuspend.isSuspendedByUs(appContext),
+                pausedByDiPlay = false,
             )?.let { throw BluetoothRadioCheck.failure(it) }
             val hotspotInfo = startWirelessHotspot(generation)
             if (isStaleWirelessRun(generation)) {
@@ -1426,7 +1277,7 @@ class CarPlayController(
 
             val adapter = currentBluetoothAdapter()
                 ?: throw BluetoothRadioCheck.failure(BluetoothRadioCheck.NO_ADAPTER)
-            val bluetoothRecoveryComplete = BydBluetoothSuspend.resumeAndWait(appContext, adapter)
+            val bluetoothRecoveryComplete = true // No BYD Bluetooth suspend to recover from on a tablet
             if (adapter.state == BluetoothAdapter.STATE_TURNING_ON) {
                 awaitBluetoothEnabled(adapter, timeoutMillis = 3_000L)
             }

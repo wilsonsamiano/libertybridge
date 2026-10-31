@@ -6,7 +6,6 @@ import com.wilson.libertybridge.iap2.message.Iap2Messages
 import com.wilson.libertybridge.iap2.session.Iap2Session
 import com.wilson.libertybridge.iap2.wire.Iap2Frame
 import com.wilson.libertybridge.iap2.wire.Iap2Parameter
-import com.wilson.libertybridge.transport.Iap2VehicleStatus.electricVehicleComponents
 import java.io.IOException
 import kotlin.math.min
 
@@ -52,10 +51,6 @@ data class Iap2IdentificationConfig(
     val wireless: Iap2WirelessIdentification? = null,
     /** Advertises and enables iAP2 LocationInformation from the accessory to the phone. */
     val locationInformationEnabled: Boolean = false,
-    /** Declares an electric vehicle and answers the phone's vehicle-status subscription. */
-    val vehicleStatusEnabled: Boolean = false,
-    /** The charging inlets declared with [vehicleStatusEnabled]. */
-    val chargingConnectors: EvChargingConnectors = EvChargingConnectors.CCS2_TYPE2,
     /** Also offer wheel speed ($PASCD) in the location component; needs [locationInformationEnabled]. */
     val vehicleSpeedEnabled: Boolean = false,
 ) {
@@ -128,7 +123,6 @@ internal fun Iap2IdentificationConfig.forWirelessLink(
     return when (role) {
         Iap2WirelessLinkRole.BLUETOOTH_BOOTSTRAP -> wirelessConfig.copy(
             locationInformationEnabled = false,
-            vehicleStatusEnabled = false,
             vehicleSpeedEnabled = false,
         )
         Iap2WirelessLinkRole.RUNTIME_TUNNEL -> wirelessConfig
@@ -311,13 +305,6 @@ class Iap2IdentificationClient(private val session: Iap2Session) {
             } else {
                 MESSAGES_RECEIVED_FROM_PHONE
             }
-            if (config.vehicleStatusEnabled) {
-                sentMessages += Iap2VehicleStatus.VEHICLE_STATUS_UPDATE
-                receivedMessages += intArrayOf(
-                    Iap2VehicleStatus.START_VEHICLE_STATUS_UPDATES,
-                    Iap2VehicleStatus.STOP_VEHICLE_STATUS_UPDATES,
-                )
-            }
             return Iap2Messages.build(Iap2Endpoints.IDENTIFICATION_INFORMATION) {
                 string(0, config.name)
                 string(1, config.modelIdentifier)
@@ -377,7 +364,6 @@ class Iap2IdentificationClient(private val session: Iap2Session) {
                         void(5)
                     }
                 }
-                if (config.vehicleStatusEnabled) electricVehicleComponents(config.manufacturer, config.chargingConnectors)
                 if (config.locationInformationEnabled) {
                     group(22) {
                         u16(0, 0)

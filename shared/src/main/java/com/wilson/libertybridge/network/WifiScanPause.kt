@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import com.wilson.libertybridge.adb.LocalAdb
-import com.wilson.libertybridge.hud.BydAdbShell
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
@@ -101,7 +100,7 @@ private object ProcessWifiScanPause : WifiScanPauseControl {
     private val worker: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor {
         Thread(it, WifiScanPause.TAG).apply { isDaemon = true }
     }
-    private val adb = BydAdbShell(WifiScanPause.TAG)
+    // No ADB helper on a tablet build: the scan-pause switch is unavailable.
     private var session: WifiScanPauseSession? = null
     private var retry: ScheduledFuture<*>? = null
 
@@ -134,7 +133,6 @@ private object ProcessWifiScanPause : WifiScanPauseControl {
             } else {
                 retry?.cancel(false)
                 retry = null
-                adb.close()
             }
         }
     }
@@ -154,8 +152,6 @@ private object ProcessWifiScanPause : WifiScanPauseControl {
         ).also { session = it }
     }
 
-    private fun switch(app: Context, enabled: Boolean): WifiScanSwitchResult {
-        val output = adb.run(app, WifiScanPause.command(app.packageCodePath, enabled), WifiScanPause.HELPER_TIMEOUT_MS)
-        return if (output == null) WifiScanPause.unanswered(adb.lastAccess) else WifiScanPause.parse(output)
-    }
+    private fun switch(app: Context, enabled: Boolean): WifiScanSwitchResult =
+        WifiScanSwitchResult.UNKNOWN
 }

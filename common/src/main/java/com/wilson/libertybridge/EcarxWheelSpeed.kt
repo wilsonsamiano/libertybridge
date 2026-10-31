@@ -5,9 +5,9 @@ import android.os.SystemClock
 import android.util.Log
 import com.wilson.libertybridge.transport.Iap2LocationProvider
 import com.wilson.libertybridge.transport.VehicleGear
-import com.wilson.libertybridge.transport.VehicleSpeedReading
-import com.wilson.libertybridge.transport.VehicleSpeedSample
-import com.wilson.libertybridge.transport.VehicleSpeedSource
+import com.wilson.libertybridge.transport.GpsSpeedReading
+import com.wilson.libertybridge.transport.GpsSpeedSample
+import com.wilson.libertybridge.transport.GpsSpeedSource
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit
  * the Monjaro tweak app MConfig+ shows raw x 3.72 as the cluster's km/h, and clusters read about 3 %
  * over the true speed.
  */
-internal object EcarxWheelSpeed : VehicleSpeedSource {
+internal object EcarxWheelSpeed : GpsSpeedSource {
     private const val TAG = "DiPlay-EcarxSpeed"
     private const val CAR = "com.ecarx.xui.adaptapi.car.Car"
     private const val ICAR = "com.ecarx.xui.adaptapi.car.ICar"
@@ -42,7 +42,7 @@ internal object EcarxWheelSpeed : VehicleSpeedSource {
     private var context: Context? = null
     private var sensor: Any? = null
     private var executor: ScheduledExecutorService? = null
-    private val samples = ArrayList<VehicleSpeedSample>()
+    private val samples = ArrayList<GpsSpeedSample>()
     private var gear: VehicleGear? = null
     private var reads = 0
     private var firstSampleLogged = false
@@ -85,10 +85,10 @@ internal object EcarxWheelSpeed : VehicleSpeedSource {
     }
 
     @Synchronized
-    override fun drain(): VehicleSpeedReading? {
+    override fun drain(): GpsSpeedReading? {
         val current = gear ?: return null
         if (samples.isEmpty()) return null
-        return VehicleSpeedReading(current, samples.toList()).also { samples.clear() }
+        return GpsSpeedReading(current, samples.toList()).also { samples.clear() }
     }
 
     internal fun gear(event: Int): VehicleGear? = when (event) {
@@ -113,7 +113,7 @@ internal object EcarxWheelSpeed : VehicleSpeedSource {
         val before = SystemClock.elapsedRealtime()
         val raw = runCatching { call(sensor, "getSensorLatestValue", SENSOR_TYPE_CAR_SPEED) as Float }.getOrNull() ?: return
         val speed = metersPerSecond(raw) ?: return
-        val sample = VehicleSpeedSample((before + SystemClock.elapsedRealtime()) / 2, speed)
+        val sample = GpsSpeedSample((before + SystemClock.elapsedRealtime()) / 2, speed)
         synchronized(this) {
             if (samples.size == MAX_SAMPLES) samples.removeAt(0)
             samples += sample

@@ -83,16 +83,9 @@ internal class MicrophoneUplink(
             config.audioType == "telephony" -> telephonyMicrophoneSource(
                 speakerphoneCall = speakerphoneCall,
                 carPhoneState = PhoneAudioRoute.carPlayCallsUseCarAudio(),
-                geelyHeadUnit = com.wilson.libertybridge.network.GeelyHeadUnit.detected,
+                geelyHeadUnit = false,
             )
-            // The Geely/Lynk head unit only opens the microphone for the voice-communication
-            // source; its voice-recognition source records silence, so Siri never hears.
-            config.audioType == "speechrecognition" ->
-                if (com.wilson.libertybridge.network.GeelyHeadUnit.detected) {
-                    MediaRecorder.AudioSource.VOICE_COMMUNICATION
-                } else {
-                    MediaRecorder.AudioSource.VOICE_RECOGNITION
-                }
+            config.audioType == "speechrecognition" -> MediaRecorder.AudioSource.VOICE_RECOGNITION
             else -> MediaRecorder.AudioSource.MIC
         }
         stats.useSource(source)

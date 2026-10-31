@@ -2,9 +2,6 @@ package com.wilson.libertybridge.media
 
 import android.content.Context
 import android.util.Log
-import com.wilson.libertybridge.hud.BydAmbientLightClient
-import com.wilson.libertybridge.hud.BydAmbientLightPolicy
-import com.wilson.libertybridge.hud.BydCarMusicRhythm
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -32,35 +29,15 @@ object AmbientMusicController {
     private var lastLogMillis = 0L
     private var idleSinceMillis: Long? = null
 
-    private val lampSession = AmbientLampSession(
-        factory = {
-            val real = BydAmbientLightClient(requireNotNull(context))
-            object : AmbientLampSession.Client {
-                override fun unhealthy(): Boolean {
-                    val phase = real.status().phase
-                    return phase == BydAmbientLightClient.Phase.FAILED || phase == BydAmbientLightClient.Phase.CLOSED
-                }
-                override fun begin(seed: BydAmbientLightPolicy.Snapshot?) = real.begin(seed?.let {
-                    BydAmbientLightClient.State(it.frontColor, it.backColor, it.frontBrightness, it.backBrightness, it.area)
-                }).thenApply { BydAmbientLightPolicy.Snapshot(it.frontColor, it.backColor, it.frontBrightness, it.backBrightness, it.area) }
-                override fun apply(desired: Triple<Int, Int, Int>) = real.apply(desired.first, desired.second, desired.third).thenApply { Unit }
-                override fun stop() = real.stop().thenApply { Unit }
-                // stop's future completes only after closeTransport, including its failure path.
-                override fun close() = real.close()
-            }
-        },
-        dispatch = { executor.execute(it) },
-        now = { android.os.SystemClock.uptimeMillis() },
-        log = { Log.i("DiPlay-Ambient", it) },
-        applied = { desired ->
-            appliedCount++
-            val now = android.os.SystemClock.uptimeMillis()
-            if (now - lastLogMillis >= 5_000) {
-                lastLogMillis = now
-                Log.i("DiPlay-Ambient", "applied=$appliedCount area=${desired.first} color=${desired.second} brightness=${desired.third} colorMode=${settings.colorMode} estimatedBpm=${colors.estimatedBpm?.toInt() ?: 0}")
-            }
-        },
-    )
+    // No ambient lamp on a tablet: the lamp session is a no-op, so the audio
+    // envelope/token machinery above stays intact without any BYD lamp I/O.
+    private object NoOpLampSession {
+        fun isReady(): Boolean = false
+        fun setEnabled(value: Boolean) {}
+        fun update(desired: Triple<Int, Int, Int>) {}
+        fun recover() {}
+    }
+    private val lampSession = NoOpLampSession
 
     // The 20 Hz lamp update, scheduled only while the feature (or the car's own rhythm) is on; turning it off
     // restores the lamps by itself.
@@ -69,16 +46,9 @@ object AmbientMusicController {
 
     /** On the executor, after [settings] changed. */
     private fun updateTicking() {
-        if (!settings.carRhythm) context?.let { BydCarMusicRhythm.setPlaying(it, false) }
-        if (!settings.enabled && !settings.carRhythm) {
-            ticking?.cancel(false)
-            ticking = null
-        } else if (ticking == null) {
-            ticking = executor.scheduleWithFixedDelay({ runCatching { tick() }.onFailure {
-                Log.w("DiPlay-Ambient", "lamp update failed", it)
-                lampSession.recover()
-            } }, 50, 50, TimeUnit.MILLISECONDS)
-        }
+        // No lamp to drive on a tablet: never schedule lamp ticking.
+        ticking?.cancel(false)
+        ticking = null
     }
 
     @Synchronized fun openSink(context: Context?): Long {
@@ -166,25 +136,9 @@ object AmbientMusicController {
         else colors = AmbientMusicColorDetector(initial, palette, AmbientColorSpeed.STANDARD, random)
     }
 
-    /** Checks existing authorization and lamp readback only; never asks for ADB or writes a lamp. */
-    fun checkSupport(context: Context): java.util.concurrent.CompletableFuture<Boolean> {
-        val result = java.util.concurrent.CompletableFuture<Boolean>()
-        executor.execute {
-            if (lampSession.isReady()) {
-                result.complete(true)
-                return@execute
-            }
-            val client = BydAmbientLightClient(context.applicationContext)
-            client.read().handle { _, error -> error == null }.thenCompose { supported ->
-                // Release the read-only worker before an enabled session can acquire its process lock.
-                client.stop().handle { _, error ->
-                    client.close()
-                    supported && error == null
-                }
-            }.whenComplete { supported, error -> result.complete(error == null && supported == true) }
-        }
-        return result
-    }
+    /** No ambient lamp exists on a tablet, so ambient support is always unavailable. */
+    fun checkSupport(context: Context): java.util.concurrent.CompletableFuture<Boolean> =
+        java.util.concurrent.CompletableFuture.completedFuture(false)
 
     fun settingsChanged(context: Context) {
         executor.execute {
@@ -267,21 +221,5 @@ object AmbientMusicController {
     // The car's own rhythm follows CarPlay music while it plays; DiPlay does not set the lamps meanwhile. On head
     // units whose audio service makes no spectrum of its own, the feed option sends the played music's 16 bands.
     private var lastBandsMillis = 0L
-    private fun carRhythm() {
-        restoreOriginal()
-        val app = context ?: return
-        val rendererActive = activeRenderer.get() != 0L && playback != null
-        val playbackState = if (rendererActive) playback?.invoke() else null
-        val playing = carRhythmPlaying(rendererActive, playbackState?.second, phonePlayback.current())
-        BydCarMusicRhythm.setPlaying(app, playing)
-        if (!settings.carRhythmFeed) return
-        val (head, headPlaying) = playbackState ?: return
-        val now = android.os.SystemClock.uptimeMillis()
-        // Not read between two sends: what plays then stays in the envelope's peak for the next send.
-        if (playing && now - lastBandsMillis < BAND_INTERVAL_MILLIS) return
-        val bands = envelope?.playedBands(head, playing && headPlaying)
-        if (!playing || bands == null) return
-        lastBandsMillis = now
-        BydCarMusicRhythm.sendBands(app, bands)
-    }
+    private fun carRhythm() {}
 }

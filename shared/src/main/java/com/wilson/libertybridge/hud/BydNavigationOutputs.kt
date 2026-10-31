@@ -62,7 +62,7 @@ object BydNavigationOutputs {
         BydBatteryStatus.also { it.start(context) }
 
     /** The car's wheel speed and gear for the iPhone's dead reckoning; read over adb while asked for. */
-    fun wheelSpeed(context: Context): com.wilson.libertybridge.transport.VehicleSpeedSource =
+    fun wheelSpeed(context: Context): com.wilson.libertybridge.transport.GpsSpeedSource =
         BydWheelSpeedSource.attach(context)
     /** Whether the car is in P (read over adb), or null when it cannot tell. Blocking. */
     fun parked(context: Context): Boolean? = BydParkedState.parked(context.applicationContext)

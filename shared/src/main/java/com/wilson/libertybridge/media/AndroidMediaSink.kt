@@ -24,7 +24,6 @@ import com.wilson.libertybridge.airplay.MicrophoneConfig
 import com.wilson.libertybridge.airplay.VideoCodec
 import com.wilson.libertybridge.airplay.toHexString
 import com.wilson.libertybridge.compat.AudioFocusRequestCompat
-import com.wilson.libertybridge.hud.BydBluetoothSuspend
 import java.io.Closeable
 import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentHashMap
@@ -559,7 +558,7 @@ class AndroidMediaSink(
         // This callback runs on the downlink thread; microphone failures must not stop playback.
         try {
             val speakerphoneCall = config.audioType == "telephony" &&
-                appContext != null && BydBluetoothSuspend.isSuspendedByUs(appContext)
+                false
             if (config.audioType == "telephony" && !speakerphoneCall) enterCommunicationMode(id)
             val uplink = microphoneUplinks.computeIfAbsent(id) {
                 MicrophoneUplink(config, onAudioDiagnostic,
@@ -747,7 +746,7 @@ class AndroidMediaSink(
             onAudioDiagnostic,
             ambientSinkToken,
             speakerphoneCall = format.audioType == "telephony" &&
-                appContext != null && BydBluetoothSuspend.isSuspendedByUs(appContext),
+                false,
             echoReference = echoReference,
             voiceFilter = callVoiceFilter && format.audioType == TELEPHONY_AUDIO_TYPE,
         ).also {

@@ -4,33 +4,33 @@ import java.util.Locale
 
 enum class VehicleGear(val letter: Char) { PARK('P'), REVERSE('R'), NEUTRAL('N'), DRIVE('D') }
 
-/** One wheel-speed reading; [elapsedMillis] is on the monotonic clock since boot. */
-data class VehicleSpeedSample(val elapsedMillis: Long, val metersPerSecond: Double)
+/** One GPS speed reading; [elapsedMillis] is on the monotonic clock since boot. */
+data class GpsSpeedSample(val elapsedMillis: Long, val metersPerSecond: Double)
 
-/** Wheel-speed readings collected since the last sentence, with the gear at the time. */
-data class VehicleSpeedReading(val gear: VehicleGear, val samples: List<VehicleSpeedSample>)
+/** GPS speed readings collected since the last sentence, with the gear at the time. */
+data class GpsSpeedReading(val gear: VehicleGear, val samples: List<GpsSpeedSample>)
 
-/** Car wheel speed for dead reckoning; sampled in the background so the iAP2 loop never waits. */
-interface VehicleSpeedSource {
+/** GPS speed for the iPhone; sampled in the background so the iAP2 loop never waits. */
+interface GpsSpeedSource {
     fun start()
 
     fun stop()
 
     /** Readings since the previous call, or null when there are none. */
-    fun drain(): VehicleSpeedReading?
+    fun drain(): GpsSpeedReading?
 
     /** What the reads returned, for a report minute that sent no speed; null when there is nothing to say. */
     fun status(): String? = null
 }
 
 /**
- * Apple's `$PASCD` vehicle-speed sentence, sent in iAP2 0xFFFB next to GGA/RMC. The layout follows a
+ * Apple's `$PASCD` speed sentence, sent in iAP2 0xFFFB next to GGA/RMC. The layout follows a
  * real head unit's log: `$PASCD,17877.092,C,P,0,2,0.00,0.000,0.16,0.000*54` is the first sample's
  * time in seconds, `C`, the gear, `0`, the sample count, then offset/speed (m/s) pairs. What `C` and
  * the `0` mean is not public, so they are copied as seen.
  */
 object PascdEncoder {
-    fun encode(reading: VehicleSpeedReading): String? {
+    fun encode(reading: GpsSpeedReading): String? {
         val samples = reading.samples.takeIf { it.isNotEmpty() } ?: return null
         val start = samples.first().elapsedMillis
         val body = buildString {
@@ -50,12 +50,12 @@ object PascdEncoder {
 }
 
 /**
- * Adds `$PASCD` to [position]'s GGA/RMC when the iPhone asked for vehicle speed. Speed is still sent
+ * Adds `$PASCD` to [position]'s GGA/RMC when the iPhone asked for speed. Speed is still sent
  * when there is no position fix, as in a tunnel, which is when the iPhone needs it most.
  */
-class VehicleSpeedLocationProvider(
+class GpsSpeedLocationProvider(
     private val position: Iap2LocationProvider,
-    private val speed: VehicleSpeedSource,
+    private val speed: GpsSpeedSource,
     private val log: (String) -> Unit = {},
     private val nowMillis: () -> Long = { System.nanoTime() / 1_000_000L },
 ) : Iap2LocationProvider {
@@ -93,7 +93,7 @@ class VehicleSpeedLocationProvider(
         return if (fix == null) pascd else fix + pascd.orEmpty()
     }
 
-    private fun record(hasFix: Boolean, reading: VehicleSpeedReading?) {
+    private fun record(hasFix: Boolean, reading: GpsSpeedReading?) {
         val now = nowMillis()
         if (windowStart < 0) windowStart = now
         updates++
@@ -118,5 +118,22 @@ class VehicleSpeedLocationProvider(
 
     internal companion object {
         const val SUMMARY_MILLIS = 60_000L
+    }
+}
+
+/**
+ * GPS speed source for a tablet: the latest Android location speed (which, on a tablet,
+ * may come from an external Bluetooth GPS receiver feeding Android location) as a
+ * single-sample reading, or null when no speed is known. No car sensor is involved.
+ */
+class GpsLocationSpeedSource(
+    private val speedMetersPerSecond: () -> Double?,
+    private val nowMillis: () -> Long = { System.nanoTime() / 1_000_000L },
+) : GpsSpeedSource {
+    override fun start() {}
+    override fun stop() {}
+    override fun drain(): GpsSpeedReading? {
+        val speed = speedMetersPerSecond() ?: return null
+        return GpsSpeedReading(VehicleGear.DRIVE, listOf(GpsSpeedSample(nowMillis(), speed)))
     }
 }

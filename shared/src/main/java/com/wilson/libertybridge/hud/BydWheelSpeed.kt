@@ -4,9 +4,9 @@ import android.content.Context
 import android.os.SystemClock
 import android.util.Log
 import com.wilson.libertybridge.transport.VehicleGear
-import com.wilson.libertybridge.transport.VehicleSpeedReading
-import com.wilson.libertybridge.transport.VehicleSpeedSample
-import com.wilson.libertybridge.transport.VehicleSpeedSource
+import com.wilson.libertybridge.transport.GpsSpeedReading
+import com.wilson.libertybridge.transport.GpsSpeedSample
+import com.wilson.libertybridge.transport.GpsSpeedSource
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -46,7 +46,7 @@ internal object BydWheelSpeed {
  * Optional, needs ADB over network: wheel speed for the iPhone's dead reckoning in tunnels. Reads the
  * speed four times a second and the gear once a second, only while the iPhone asks for location.
  */
-internal object BydWheelSpeedSource : VehicleSpeedSource {
+internal object BydWheelSpeedSource : GpsSpeedSource {
     private const val TAG = "DiPlay-BYD-Speed"
     private const val READ_MILLIS = 250L
     private const val GEAR_EVERY_READS = 4
@@ -55,7 +55,7 @@ internal object BydWheelSpeedSource : VehicleSpeedSource {
     private val shell = BydAdbShell(TAG)
     private var context: Context? = null
     private var executor: ScheduledExecutorService? = null
-    private val samples = ArrayList<VehicleSpeedSample>()
+    private val samples = ArrayList<GpsSpeedSample>()
     private var gear: VehicleGear? = null
     private var reads = 0
     private var readLog = WheelSpeedReads()
@@ -86,10 +86,10 @@ internal object BydWheelSpeedSource : VehicleSpeedSource {
     }
 
     @Synchronized
-    override fun drain(): VehicleSpeedReading? {
+    override fun drain(): GpsSpeedReading? {
         val current = gear ?: return null
         if (samples.isEmpty()) return null
-        return VehicleSpeedReading(current, samples.toList()).also { samples.clear() }
+        return GpsSpeedReading(current, samples.toList()).also { samples.clear() }
     }
 
     @Synchronized
@@ -111,7 +111,7 @@ internal object BydWheelSpeedSource : VehicleSpeedSource {
         val read = BydWheelSpeed.metersPerSecond(reply)
         synchronized(this) { readLog.speed(reply, read) }
         val speed = read ?: return
-        val sample = VehicleSpeedSample((before + SystemClock.elapsedRealtime()) / 2, speed)
+        val sample = GpsSpeedSample((before + SystemClock.elapsedRealtime()) / 2, speed)
         synchronized(this) {
             if (samples.size == MAX_SAMPLES) samples.removeAt(0)
             samples += sample

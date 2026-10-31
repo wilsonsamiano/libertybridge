@@ -8,13 +8,13 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class VehicleSpeedNmeaTest {
+class GpsSpeedNmeaTest {
     @Test
     fun encodesLikeARealHeadUnit() {
         // From a production head unit's iAP2 log: parked, two samples 0.16 s apart.
-        val reading = VehicleSpeedReading(
+        val reading = GpsSpeedReading(
             VehicleGear.PARK,
-            listOf(VehicleSpeedSample(17_877_092, 0.0), VehicleSpeedSample(17_877_252, 0.0)),
+            listOf(GpsSpeedSample(17_877_092, 0.0), GpsSpeedSample(17_877_252, 0.0)),
         )
 
         assertEquals("\$PASCD,17877.092,C,P,0,2,0.00,0.000,0.16,0.000*54\r\n", PascdEncoder.encode(reading))
@@ -22,22 +22,22 @@ class VehicleSpeedNmeaTest {
 
     @Test
     fun encodesSpeedGearAndChecksum() {
-        val reading = VehicleSpeedReading(
+        val reading = GpsSpeedReading(
             VehicleGear.REVERSE,
-            listOf(VehicleSpeedSample(1_000, 1.5), VehicleSpeedSample(1_250, 1.25)),
+            listOf(GpsSpeedSample(1_000, 1.5), GpsSpeedSample(1_250, 1.25)),
         )
 
         val sentence = PascdEncoder.encode(reading)!!.trimEnd()
         assertTrue(sentence.startsWith("\$PASCD,1.000,C,R,0,2,0.00,1.500,0.25,1.250*"))
         val star = sentence.lastIndexOf('*')
         assertEquals(checksum(sentence.substring(1, star)), sentence.substring(star + 1))
-        assertNull(PascdEncoder.encode(VehicleSpeedReading(VehicleGear.DRIVE, emptyList())))
+        assertNull(PascdEncoder.encode(GpsSpeedReading(VehicleGear.DRIVE, emptyList())))
     }
 
     @Test
     fun addsSpeedOnlyWhenTheIphoneAsksForIt() {
         val speed = FakeSpeed()
-        val provider = VehicleSpeedLocationProvider(FakePosition("\$GPGGA\r\n"), speed)
+        val provider = GpsSpeedLocationProvider(FakePosition("\$GPGGA\r\n"), speed)
 
         provider.onRequested(setOf(1, 2))
         provider.start()
@@ -54,7 +54,7 @@ class VehicleSpeedNmeaTest {
 
     @Test
     fun keepsSendingSpeedWithoutAPositionFix() {
-        val provider = VehicleSpeedLocationProvider(FakePosition(null), FakeSpeed())
+        val provider = GpsSpeedLocationProvider(FakePosition(null), FakeSpeed())
 
         provider.onRequested(setOf(Iap2LocationMessages.VEHICLE_SPEED_DATA))
         assertTrue(provider.start())
@@ -72,7 +72,7 @@ class VehicleSpeedNmeaTest {
             override fun stop() = Unit
             override fun latestNmea() = fixes.removeAt(0)
         }
-        val provider = VehicleSpeedLocationProvider(position, FakeSpeed(), logs::add, { now })
+        val provider = GpsSpeedLocationProvider(position, FakeSpeed(), logs::add, { now })
         provider.onRequested(setOf(Iap2LocationMessages.VEHICLE_SPEED_DATA))
         repeat(3) { provider.latestNmea(); now += 20_000L }
         assertTrue(logs.isEmpty())
@@ -86,13 +86,13 @@ class VehicleSpeedNmeaTest {
     fun aMinuteWithoutWheelSpeedSaysWhatTheReadsReturned() {
         var now = 1_000L
         val logs = mutableListOf<String>()
-        val speed = object : VehicleSpeedSource {
+        val speed = object : GpsSpeedSource {
             override fun start() = Unit
             override fun stop() = Unit
-            override fun drain(): VehicleSpeedReading? = null
+            override fun drain(): GpsSpeedReading? = null
             override fun status() = "adb=READY speed=0/240 gear=none"
         }
-        val provider = VehicleSpeedLocationProvider(FakePosition("\$GPGGA\r\n"), speed, logs::add, { now })
+        val provider = GpsSpeedLocationProvider(FakePosition("\$GPGGA\r\n"), speed, logs::add, { now })
         provider.onRequested(setOf(Iap2LocationMessages.VEHICLE_SPEED_DATA))
         provider.latestNmea()
         now += 60_000L
@@ -147,11 +147,11 @@ class VehicleSpeedNmeaTest {
         override fun latestNmea() = nmea
     }
 
-    private class FakeSpeed : VehicleSpeedSource {
+    private class FakeSpeed : GpsSpeedSource {
         var started = false
         override fun start() { started = true }
         override fun stop() { started = false }
-        override fun drain() = VehicleSpeedReading(VehicleGear.DRIVE, listOf(VehicleSpeedSample(5_000, 13.9)))
+        override fun drain() = GpsSpeedReading(VehicleGear.DRIVE, listOf(GpsSpeedSample(5_000, 13.9)))
         // Never shown: a minute with speed in it needs no explanation.
         override fun status() = "adb=READY speed=4/4 gear=D"
     }

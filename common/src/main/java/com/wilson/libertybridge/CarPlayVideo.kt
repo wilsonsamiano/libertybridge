@@ -9,7 +9,6 @@ import android.widget.Toast
 import com.wilson.libertybridge.airplay.CarPlayMediaButton
 import com.wilson.libertybridge.airplay.VideoInCar
 import com.wilson.libertybridge.host.R
-import com.wilson.libertybridge.hud.BydNavigationOutputs
 import com.wilson.libertybridge.orchestration.CarPlayController
 import com.wilson.libertybridge.orchestration.CarPlayVideoListener
 import java.util.concurrent.CompletableFuture
@@ -54,7 +53,8 @@ internal object CarPlayVideo : CarPlayVideoListener {
         next.videoListener = this
     }
 
-    override fun readParked(): Boolean? = appContext?.let(BydNavigationOutputs::parked)
+    // No parked gear on a tablet: video availability is not gated on a car gear.
+    override fun readParked(): Boolean? = null
 
     override fun onVideoAllowedChanged(allowed: Boolean) {
         if (!allowed) main.post { closePlayer("the car left P") }

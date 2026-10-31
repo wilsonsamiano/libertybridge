@@ -129,6 +129,9 @@ class AndroidCarPlayLocationProvider(
         }
     }
 
+    /** Latest known GPS speed in m/s, or null when no fix with speed is available. */
+    fun latestSpeedMetersPerSecond(): Double? = latestFix()?.takeIf { it.hasSpeed() }?.speed?.toDouble()
+
     private fun latestFix(): Location? {
         val now = System.currentTimeMillis()
         return preferredProviders.asSequence()

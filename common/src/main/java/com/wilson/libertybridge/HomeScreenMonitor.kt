@@ -2,7 +2,9 @@ package com.wilson.libertybridge
 
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
+import android.app.AppOpsManager
 import android.content.Context
+import android.os.Process
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Handler
@@ -43,7 +45,7 @@ internal class HomeScreenMonitor(context: Context, private val onChange: (Boolea
         foregroundListener = listener
 
         // UsageStatsManager poller fallback
-        if (DiLink51ClusterMonitor.hasAccess(context)) {
+        if (hasAccess(context)) {
             since = System.currentTimeMillis() - FIRST_LOOK_BACK_MILLIS
             newestTime = 0L
             newestPackage = null
@@ -125,7 +127,8 @@ internal class HomeScreenMonitor(context: Context, private val onChange: (Boolea
         )
 
         // Accessibility alone is not a foreground source: this PR has no service dispatching events.
-        fun hasAccess(context: Context): Boolean = DiLink51ClusterMonitor.hasAccess(context)
+        fun hasAccess(context: Context): Boolean = context.getSystemService(AppOpsManager::class.java)
+            .checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.packageName) == AppOpsManager.MODE_ALLOWED
 
         /** Query all launcher packages declared on the system. */
         fun queryHomePackages(context: Context): Set<String> {
