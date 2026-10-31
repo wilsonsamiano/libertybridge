@@ -88,10 +88,6 @@ class AirPlaySession(
     internal var deviceBtMac = ""
     internal val activeStreams = linkedSetOf<Int>()
 
-    /** Counts the iPhone's cluster stream setups; 0 while no cluster stream is up. */
-    @Volatile var clusterStream = 0
-        private set
-    private var clusterStreamSetups = 0
     @Volatile private var mainScreenToken: Any? = null
     @Volatile private var mainFrameRendered = false
     // Activity 重建后仍可判断当前会话的中控主视频是否已经出帧。
@@ -154,7 +150,6 @@ class AirPlaySession(
     override fun close() {
         if (!closed.compareAndSet(false, true)) return
         mainScreenToken = null
-        clearClusterContent()
         safeClose(socket)
         try {
             media.onSessionClosed(this)
@@ -167,35 +162,6 @@ class AirPlaySession(
 
     /** Stable identity of the usable primary screen; replaced on SETUP, absent after teardown/close. */
     internal fun mainScreenSessionToken(): Any? = if (closed.get()) null else mainScreenToken
-
-    /**
-     * Asks the iPhone to draw CarPlay's cluster UI on the alt screen (showUI with the display's URL,
-     * then a keyframe) or to stop drawing it (stopUI). The stream stays up either way; CarKit handles
-     * both as car-initiated commands for a screen UUID.
-     */
-    fun clusterUrl(): String? = clusterContentRoute()?.second
-
-    /** One immutable snapshot keeps content and generation checks consistent without locking keys. */
-    internal fun clusterContentRoute(): Triple<Int, String?, Any>? {
-        val content = clusterContent ?: return null
-        if (closed.get() || content.stream != clusterStream) return null
-        return Triple(content.stream, content.displayed, content.token)
-    }
-
-    /**
-     * Switches the dashboard to another of the iPhone's `altScreenURLs` without reconnecting: `showUI`
-     * with that URL and a keyframe (on a Tang this switches map, turn card and both at once). With [send]
-     * false (the map is paused) the URL is only kept for the next `showUI`. False without a cluster stream.
-     */
-    fun changeMapZoomLevel(zoomIn: Boolean): Boolean = clusterStream > 0 && sendCommand(
-        linkedMapOf(
-            "type" to "changeMapZoomLevel",
-            "params" to linkedMapOf(
-                "uuid" to AirPlayInfoPlist.ALT_UUID,
-                "zoomDirection" to if (zoomIn) ZOOM_DIRECTION_IN else ZOOM_DIRECTION_OUT,
-            ),
-        ),
-    )
 
     /** Moves CarPlay on the main screen to one of its declared view areas, without reconnecting. */
     fun showViewArea(index: Int): Boolean =
@@ -532,7 +498,6 @@ class AirPlaySession(
         } catch (error: Exception) {
             Log.w(TAG, "airplay SETUP response callback failed", error)
         }
-        reapplyClusterContent()
     }
 
     private fun debugLog(message: String, uiVisible: Boolean = true) {
@@ -615,8 +580,7 @@ class AirPlaySession(
                             findIphoneCornerMask(stream)?.let(::notifyCornerMask)
                         }
                         activeStreams.add(type)
-                        if (type == STREAM_TYPE_ALT_SCREEN) beginClusterContent()
-                        else mainScreenToken = Any()
+                        if (type == STREAM_TYPE_MAIN_SCREEN) mainScreenToken = Any()
                         result.add(linkedMapOf("type" to type, "dataPort" to port))
                     }
                 }
@@ -703,14 +667,12 @@ class AirPlaySession(
 
         // Restore wheel input before releasing media resources, which may take time to close.
         if (types == null || STREAM_TYPE_MAIN_SCREEN in types) mainScreenToken = null
-        if (types == null || STREAM_TYPE_ALT_SCREEN in types) clearClusterContent()
         if (types == null) {
             activeStreams.toList().forEach { media.onTeardown(this, it) }
             activeStreams.clear()
         } else {
             types.forEach { type -> if (activeStreams.remove(type)) media.onTeardown(this, type) }
         }
-        if (STREAM_TYPE_ALT_SCREEN !in activeStreams) clearClusterContent()
         return RtspMessage.Response(status = 200)
     }
 
@@ -807,7 +769,6 @@ class AirPlaySession(
             }
             val videoDelivery = videoPlaybackAvailability.setEventReady(true)
             debugLog("airplay video event ready availability=$videoDelivery")
-            reapplyClusterContent()
             runEventRead(socket)
         } catch (error: Exception) {
             if (!closed.get()) {

@@ -1551,8 +1551,7 @@ class CarPlayController(
         val generation = wirelessGeneration.get()
         debugLog(
             "wireless iAP2 runtime tunnel control starting " +
-                "location=${identification.locationInformationEnabled} " +
-                "vehicleStatus=${identification.vehicleStatusEnabled}",
+                "location=${identification.locationInformationEnabled}",
         )
         return try {
             tunnelExecutor.execute {
@@ -1565,7 +1564,6 @@ class CarPlayController(
                         endpoint = endpoint,
                         timeoutMillis = Iap2WirelessControlClient.NO_TIMEOUT_MILLIS,
                         locationProvider = locationProvider,
-                        vehicleStatusProvider = vehicleStatusProvider,
                         onReady = {
                             onWirelessTunnelReady(generation)
                         },
@@ -2279,8 +2277,7 @@ class CarPlayController(
             wiredStartWatchdog = startWatchdog
             debugLog(
                 "wired iAP2 runtime control starting " +
-                    "location=${config.identification.locationInformationEnabled} " +
-                    "vehicleStatus=${config.identification.vehicleStatusEnabled}",
+                    "location=${config.identification.locationInformationEnabled}",
             )
             val result = Iap2WiredControlClient(csm, Iap2MfiAuthenticationClient(mfi)).run(
                 identification = config.identification,
@@ -2288,7 +2285,6 @@ class CarPlayController(
                 availableCurrentMilliAmps = config.availableCurrentMilliAmps,
                 timeoutMillis = controlLoopTimeoutMillis(),
                 locationProvider = locationProvider,
-                vehicleStatusProvider = vehicleStatusProvider,
                 onIncoming = ::onRouteFrame,
                 onProgress = { message ->
                     if (message == Iap2WiredControlClient.START_SESSION_AGAIN_PROGRESS) {
