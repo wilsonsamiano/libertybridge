@@ -42,7 +42,10 @@ internal class AdbPacket(val command: Int, val arg0: Int, val arg1: Int, val pay
             val arg1 = header.int
             val length = header.int
             header.int // payload sum
-            if (header.int != command.inv() || length !in 0..MAX_PAYLOAD) throw IOException("bad ADB header")
+            val magic = header.int
+            if (magic != command.inv() || length !in 0..MAX_PAYLOAD) throw IOException(
+                "bad ADB header cmd=0x${command.toUInt().toString(16)} arg0=$arg0 arg1=$arg1 len=$length magic=0x${magic.toUInt().toString(16)}",
+            )
             return AdbPacket(command, arg0, arg1, readFully(input, length))
         }
 
