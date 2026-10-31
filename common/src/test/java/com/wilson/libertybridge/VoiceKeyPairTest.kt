@@ -1,5 +1,7 @@
 package com.wilson.libertybridge
 
+import com.wilson.libertybridge.hud.VoiceKeyPair
+
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

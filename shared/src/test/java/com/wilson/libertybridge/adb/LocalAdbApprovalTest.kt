@@ -24,7 +24,7 @@ class LocalAdbApprovalTest {
             assertEquals("ok", result.get(5, TimeUnit.SECONDS))
             assertEquals(1, server.keyOffers.get())
             assertEquals(listOf("shell:echo ok"), server.commands)
-            assertNull(server.failure.get())
+            assertNull(server.failure.get()?.toString(), server.failure.get())
         }
     }
 
@@ -39,7 +39,7 @@ class LocalAdbApprovalTest {
             server.approved = true
             assertEquals("ok", result.get(5, TimeUnit.SECONDS))
             assertEquals(1, server.keyOffers.get())
-            assertNull(server.failure.get())
+            assertNull(server.failure.get()?.toString(), server.failure.get())
         }
     }
 
@@ -49,7 +49,7 @@ class LocalAdbApprovalTest {
             assertFalse(server.approved)
             assertEquals(1, server.keyOffers.get())
             assertEquals(listOf("shell:echo ok"), server.commands)
-            assertNull(server.failure.get())
+            assertNull(server.failure.get()?.toString(), server.failure.get())
         }
     }
 

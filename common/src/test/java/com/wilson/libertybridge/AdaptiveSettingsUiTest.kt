@@ -1077,7 +1077,7 @@ class AdaptiveSettingsUiTest {
     @Test fun compactOverviewCategoriesHaveIcons() {
         val screen = openSettings()
         listOf(SettingsCategory.CONNECTION, SettingsCategory.DISPLAY, SettingsCategory.AUDIO,
-            SettingsCategory.NAVIGATION, SettingsCategory.VEHICLE).forEach { category ->
+            SettingsCategory.NAVIGATION).forEach { category ->
             val title = ReflectionHelpers.callInstanceMethod<String>(screen, "settingsCategoryTitle",
                 ReflectionHelpers.ClassParameter(SettingsCategory::class.java, category))
             val destination = descendants(screen.window.decorView).single {

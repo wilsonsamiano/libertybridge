@@ -1,5 +1,7 @@
 package com.wilson.libertybridge.media
 
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioDeviceInfo
@@ -558,7 +560,7 @@ class AndroidMediaSink(
         // This callback runs on the downlink thread; microphone failures must not stop playback.
         try {
             val speakerphoneCall = config.audioType == "telephony" &&
-                false
+                appContext != null && bluetoothSuspendedByUs(appContext)
             if (config.audioType == "telephony" && !speakerphoneCall) enterCommunicationMode(id)
             val uplink = microphoneUplinks.computeIfAbsent(id) {
                 MicrophoneUplink(config, onAudioDiagnostic,
@@ -583,6 +585,22 @@ class AndroidMediaSink(
         } finally {
             restoreAudioMode(id)
         }
+    }
+
+    /**
+     * Bluetooth was paused by this app for a CarPlay call (the restore flag is set) and the
+     * radio is now off, so the call uses the tablet's own speaker and microphone instead of
+     * a Bluetooth audio path. This is only the check; the pause/resume machinery is gone.
+     */
+    private fun bluetoothSuspendedByUs(context: Context): Boolean {
+        val app = context.applicationContext
+        val restorePending = app.getSharedPreferences("diplay_bt_suspend", Context.MODE_PRIVATE)
+            .getBoolean("restore_initially_enabled", false)
+        if (!restorePending) return false
+        val adapter = runCatching {
+            app.getSystemService(BluetoothManager::class.java)?.adapter ?: BluetoothAdapter.getDefaultAdapter()
+        }.getOrNull() ?: return false
+        return adapter.state == BluetoothAdapter.STATE_OFF
     }
 
     private fun enterCommunicationMode(id: AudioStreamId) {
@@ -746,7 +764,7 @@ class AndroidMediaSink(
             onAudioDiagnostic,
             ambientSinkToken,
             speakerphoneCall = format.audioType == "telephony" &&
-                false,
+                appContext != null && bluetoothSuspendedByUs(appContext),
             echoReference = echoReference,
             voiceFilter = callVoiceFilter && format.audioType == TELEPHONY_AUDIO_TYPE,
         ).also {

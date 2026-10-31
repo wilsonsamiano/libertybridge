@@ -17,20 +17,16 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import org.robolectric.annotation.Implements
-import org.robolectric.annotation.Implementation
 import org.robolectric.annotation.LooperMode
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [29], shadows = [DiPlayAuthenticationTest.NavigationOutputs::class])
+@Config(sdk = [29])
 @LooperMode(LooperMode.Mode.PAUSED)
 class DiPlayAuthenticationTest {
     private val context get() = RuntimeEnvironment.getApplication()
     private val directory get() = File(context.noBackupFilesDir, "offline-mfi")
 
     @Before fun setUp() {
-        // The JVM test host has no vehicle SOME/IP gateway.
-        shadowOf(context).declareActionUnbindable("com.ts.car.someip.SomeIpServerService")
         DiPlayBootstrap::class.java.getDeclaredField("ready").apply { isAccessible = true }
             .setBoolean(null, false)
     }

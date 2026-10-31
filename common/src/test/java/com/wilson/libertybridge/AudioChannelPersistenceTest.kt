@@ -90,4 +90,4 @@ class AudioChannelPersistenceTest {
         AirPlayPersistence.saveNavigationStreamType(context, 21)
         assertEquals(0, AirPlayPersistence.loadNavigationAudioChannel(context))
     }
-
+}
