@@ -3,6 +3,7 @@ package com.wilson.libertybridge.hud
 import android.view.KeyEvent
 import com.wilson.libertybridge.hud.CarPlayCallKeyPolicy.Action
 import com.wilson.libertybridge.iap2.message.Iap2Messages
+import com.wilson.libertybridge.media.CarPlayPlaybackStatus
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -63,7 +64,7 @@ class CarPlayCallStateTest {
 
     @Test
     fun otherMessagesAndClearLeaveNoCall() {
-        assertFalse(state.accept(Iap2Messages.buildRaw(ClusterSongState.NOW_PLAYING_UPDATE) { u8(2, 2) }))
+        assertFalse(state.accept(Iap2Messages.buildRaw(CarPlayPlaybackStatus.NOW_PLAYING_UPDATE) { u8(2, 2) }))
         assertNull(state.current())
         state.accept(update("a", status = 2, name = "Mum"))
         state.clear()

@@ -1,9 +1,7 @@
 package com.wilson.libertybridge.media
 
 import android.content.Context
-import java.time.Duration
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -12,7 +10,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
-import org.robolectric.shadows.ShadowSystemClock
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], manifest = Config.NONE)
@@ -34,3 +31,10 @@ class AmbientMusicTickingTest {
         }
     }
 
+    private fun settle() {
+        (field("executor") as ExecutorService).submit {}.get(2, TimeUnit.SECONDS)
+    }
+
+    private fun field(name: String): Any? = AmbientMusicController::class.java.getDeclaredField(name)
+        .apply { isAccessible = true }.get(AmbientMusicController)
+}
